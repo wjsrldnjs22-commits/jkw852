@@ -1,0 +1,1778 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="WONI MONEY">
+  <title>WONI MONEY</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#f6f7f9;--card:#fff;--text:#16181c;--muted:#7b818b;--line:#e8ebef;
+  --accent:#111827;--accent2:#eef2ff;--good:#14804a;--bad:#c5342d;--warn:#a56300;
+  --soft:#f3f5f7;--radius:20px;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{width:min(100%,720px);margin:0 auto;padding:18px 14px 94px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:2px 2px 14px}
+.brand{font-size:19px;font-weight:950;letter-spacing:-.045em}
+.brand small{display:block;margin-top:3px;font-size:10px;color:var(--muted);font-weight:750;letter-spacing:0}
+.month-picker{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.month-picker button{width:34px;height:34px;border:0;background:#fff;font-weight:900}
+.month-picker b{min-width:72px;text-align:center;font-size:12px}
+
+.view{display:none}.view.active{display:block}
+.stack{display:grid;gap:11px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.section-head h2{margin:0;font-size:14px;letter-spacing:-.02em}
+.section-head small{font-size:10px;color:var(--muted)}
+.section-head button{border:0;background:var(--soft);padding:7px 9px;border-radius:9px;font-size:10px;font-weight:800}
+
+.hero{background:var(--accent);color:#fff;border:0;padding:19px}
+.hero .eyebrow{font-size:11px;color:#b9c0cb;font-weight:800}
+.hero .big{font-size:34px;font-weight:950;letter-spacing:-.05em;margin-top:5px}
+.hero .sub{font-size:11px;color:#cbd0d8;margin-top:6px}
+.hero-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:16px}
+.hero-cell{padding:10px;border-radius:13px;background:rgba(255,255,255,.08)}
+.hero-cell span{display:block;font-size:9px;color:#bfc5ce;font-weight:800}
+.hero-cell strong{display:block;font-size:13px;margin-top:4px;white-space:nowrap}
+
+.quick-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.quick-btn{border:0;background:var(--soft);border-radius:13px;min-height:62px;padding:10px 6px;color:var(--text);font-weight:850;font-size:11px}
+.quick-btn .ico{display:block;font-size:18px;margin-bottom:4px}
+
+
+.current-status{padding:0;overflow:hidden;background:linear-gradient(180deg,#fff,#fafbfc);border:1px solid var(--line)}
+.status-summary-toggle{list-style:none;cursor:pointer;padding:14px 15px}
+.status-summary-toggle::-webkit-details-marker{display:none}
+.status-summary-toggle:after{content:"펼치기";float:right;margin-top:-18px;color:var(--muted);font-size:9px;font-weight:850}
+.current-status[open] .status-summary-toggle:after{content:"접기"}
+.status-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding-right:46px}
+.status-head span{display:block;font-size:9px;color:var(--muted);font-weight:850}
+.status-head h2{margin:3px 0 0;font-size:15px;letter-spacing:-.025em}
+.status-badge{flex:0 0 auto;background:#fff5e5;color:var(--warn);padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}
+.status-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.status-mini div{background:var(--soft);border-radius:10px;padding:8px;min-width:0}
+.status-mini span{display:block;color:var(--muted);font-size:8px;font-weight:750}
+.status-mini b{display:block;margin-top:3px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status-details{border-top:1px solid var(--line);padding:0 15px 14px}
+.status-summary{margin:11px 0 0;color:var(--muted);font-size:10px;line-height:1.55}
+.status-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:12px}
+.status-box{background:var(--soft);border-radius:12px;padding:10px;min-width:0}
+.status-box span,.status-box small{display:block;color:var(--muted);font-size:8.5px;font-weight:750}
+.status-box strong{display:block;margin:4px 0 2px;font-size:14px;letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phase-list{margin-top:11px;border-top:1px solid var(--line)}
+.phase-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.phase-row:last-child{border-bottom:0}
+.phase-row b{display:block;font-size:10px}
+.phase-row small{display:block;color:var(--muted);font-size:8.5px;margin-top:2px}
+.phase-row strong{font-size:10px;font-weight:900;white-space:nowrap}
+.status-foot{display:flex;justify-content:space-between;gap:10px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:9px}
+.status-foot span{color:var(--muted)}
+.free-chip{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 7px;border-radius:999px;background:#edf8f2;color:var(--good);font-size:8.5px;font-weight:850}
+
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:17px;padding:14px}
+.metric span{font-size:10px;color:var(--muted);font-weight:800}
+.metric strong{display:block;margin-top:5px;font-size:20px;letter-spacing:-.035em}
+.metric small{display:block;color:var(--muted);font-size:9px;margin-top:5px;line-height:1.45}
+
+.bar{height:7px;background:#edf0f3;border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.budget-row{padding:9px 0;border-top:1px solid var(--line)}
+.budget-row:first-child{border-top:0;padding-top:0}
+.budget-top{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-bottom:7px}
+.budget-top b{font-size:12px}.budget-top span{color:var(--muted)}
+
+.tx-list{display:grid}
+.tx{display:grid;grid-template-columns:40px 1fr auto;gap:9px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.tx:first-child{border-top:0}
+.tx-icon{width:36px;height:36px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-size:16px}
+.tx b{display:block;font-size:12px}
+.tx small{display:block;font-size:9px;color:var(--muted);margin-top:3px}
+.tx-amt{font-size:12px;font-weight:900;text-align:right;white-space:nowrap}
+.empty{padding:22px 4px;text-align:center;font-size:11px;color:var(--muted)}
+
+.bill-total{font-size:29px;font-weight:950;letter-spacing:-.045em}
+.bill-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.bill-list{margin-top:13px}
+.bill-row,.fixed-row,.loan-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.bill-row:first-child,.fixed-row:first-child,.loan-row:first-child{border-top:0}
+.bill-row b,.fixed-row b,.loan-row b{font-size:12px}
+.bill-row small,.loan-row small{display:block;font-size:9px;color:var(--muted);margin-top:3px}
+.bill-row strong,.fixed-row strong,.loan-row strong{font-size:12px;white-space:nowrap;text-align:right}
+.tag{display:inline-flex;padding:4px 7px;border-radius:999px;background:#eef0f3;color:#59606a;font-size:9px;font-weight:850;margin-top:5px}
+.tag.good{background:#edf8f2;color:var(--good)}
+
+.installment-card{background:#fbfbfc;border:1px solid var(--line);border-radius:15px;padding:12px;margin-top:8px}
+.installment-top{display:flex;justify-content:space-between;gap:10px}
+.installment-top b{font-size:12px}.installment-top strong{font-size:12px}
+.installment-meta{display:flex;justify-content:space-between;gap:8px;margin-top:7px;color:var(--muted);font-size:9px}
+.installment-card .bar{margin-top:9px}
+
+.plan-main{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+.plan-main span{font-size:10px;color:var(--muted);font-weight:800}
+.plan-main strong{display:block;font-size:26px;margin-top:4px;letter-spacing:-.04em}
+.plan-status{text-align:right;font-size:11px;font-weight:900}
+.plan-list{margin-top:12px}
+.plan-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:11px}
+.plan-row span{color:var(--muted)}
+.plan-row b{white-space:nowrap}
+
+.goal-top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.goal-top span{font-size:10px;color:var(--muted);font-weight:800}
+.goal-top strong{display:block;font-size:26px;margin-top:4px;letter-spacing:-.04em}
+.goal-pct{font-size:11px;color:var(--muted)}
+.goal-card .bar{margin-top:13px}
+
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.field label{display:block;font-size:9px;color:var(--muted);font-weight:800;margin-bottom:5px}
+input,select{width:100%;min-height:43px;border:1px solid #dfe3e8;border-radius:11px;background:#fff;padding:9px 10px;color:var(--text)}
+.inline-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.btn{border:0;border-radius:11px;min-height:40px;padding:9px 12px;font-size:10px;font-weight:900}
+.btn.primary{background:var(--accent);color:#fff}.btn.ghost{background:var(--soft);color:var(--text)}.btn.danger{background:#fff0ef;color:var(--bad)}
+
+.good{color:var(--good)!important}.bad{color:var(--bad)!important}.warn{color:var(--warn)!important}
+.note{font-size:9px;color:var(--muted);line-height:1.55;margin-top:8px}
+
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(720px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:20}
+.bottom-nav button{border:0;background:transparent;padding:9px 4px 8px;font-size:9px;color:var(--muted);font-weight:800}
+.bottom-nav button span{display:block;font-size:17px;margin-bottom:2px}
+.bottom-nav button.active{color:var(--text)}
+
+.fab{position:fixed;right:max(18px,calc((100vw - 720px)/2 + 18px));bottom:76px;width:52px;height:52px;border:0;border-radius:50%;background:var(--accent);color:#fff;font-size:26px;box-shadow:0 8px 26px rgba(17,24,39,.24);z-index:21}
+
+dialog{border:0;padding:0;width:min(480px,calc(100% - 22px));border-radius:22px;box-shadow:0 28px 80px rgba(0,0,0,.28)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+.sheet{padding:17px}.sheet h3{margin:0 0 13px;font-size:16px}
+.type-switch{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.type-switch button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px;font-size:10px;font-weight:900}
+.type-switch button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sheet-actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:11px}
+
+.install-banner{display:none;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:11px}
+.install-banner.show{display:flex}
+.install-banner div{font-size:10px;color:var(--muted)}.install-banner b{display:block;color:var(--text);font-size:11px;margin-bottom:2px}
+
+
+.snapshot-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.snapshot-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px;min-width:0}
+.snapshot-item span{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:8px;font-weight:800}
+.snapshot-item b{display:block;margin-top:4px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.source-tag{display:inline-flex;padding:2px 5px;border-radius:999px;background:#eef0f3;color:#666;font-size:7px;font-weight:900}
+.source-tag.confirmed{background:#edf8f2;color:var(--good)}
+.source-tag.estimate{background:#fff5e5;color:var(--warn)}
+.baseline-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px}
+.baseline-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.baseline-title h3{margin:0;font-size:12px}
+.baseline-title span{color:var(--muted);font-size:8px}
+.baseline-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.baseline-grid div{background:var(--soft);border-radius:10px;padding:8px}
+.baseline-grid span{display:block;color:var(--muted);font-size:7.5px;font-weight:800}
+.baseline-grid b{display:block;margin-top:3px;font-size:10px}
+.cash-alert{margin-top:10px;padding:10px 11px;border-radius:11px;background:#fff7ea;border:1px solid #f2dfbd;font-size:9px;line-height:1.55;color:#6f4a00}
+.card-meta{display:flex;justify-content:space-between;gap:8px;margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);font-size:8px;color:var(--muted)}
+.card-meta b{color:var(--ink)}
+.unknown-note{margin-top:8px;padding:9px;border-radius:10px;background:#f7f8fa;color:var(--muted);font-size:8.5px;line-height:1.5}
+
+@media(max-width:520px){.snapshot-strip{grid-template-columns:1fr 1fr}.baseline-grid{grid-template-columns:1fr 1fr}
+  .app{padding:13px 11px 90px}
+  .hero .big{font-size:31px}
+  .metric strong{font-size:18px}
+  .input-grid{grid-template-columns:1fr}
+  .hero-grid{gap:5px}
+  .hero-cell{padding:9px 6px}
+  .hero-cell strong{font-size:11px}
+}
+
+.auto-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+.auto-card{border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:.9rem;min-width:0}
+.auto-card span{display:block;color:var(--muted-foreground);font-size:.6rem;font-weight:700}
+.auto-card strong{display:block;margin-top:.28rem;font-family:var(--font-family-display);font-size:1.15rem;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.auto-card small{display:block;margin-top:.25rem;color:var(--muted-foreground);font-size:.56rem;line-height:1.4}
+.schedule-list{display:grid}
+.schedule-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.75rem;align-items:center;border-top:1px solid var(--border);padding:.58rem 0}
+.schedule-row:first-child{border-top:0}
+.schedule-row b{display:block;font-size:.7rem}
+.schedule-row small{display:block;margin-top:.12rem;color:var(--muted-foreground);font-size:.56rem}
+.schedule-row strong{font-size:.68rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.schedule-tag{display:inline-flex;margin-left:.3rem;padding:.12rem .35rem;border-radius:999px;background:var(--muted);color:var(--muted-foreground);font-size:.5rem;font-weight:800;vertical-align:middle}
+.schedule-tag.salary{background:color-mix(in srgb,var(--success) 10%,var(--card));color:var(--success)}
+.schedule-tag.auto{background:color-mix(in srgb,var(--info) 10%,var(--card));color:var(--info)}
+.installment-state{display:flex;justify-content:space-between;gap:.6rem;margin-top:.35rem;color:var(--muted-foreground);font-size:.56rem}
+.installment-state b{color:var(--foreground)}
+.automation-note{margin-top:.65rem;border-radius:var(--radius);background:var(--surface);padding:.65rem;color:var(--muted-foreground);font-size:.58rem;line-height:1.5}
+@media(max-width:34rem){.auto-grid{grid-template-columns:1fr 1fr}.auto-card strong{font-size:1.02rem}}
+
+
+.card-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+.card-summary-box{border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:.9rem}
+.card-summary-box span{display:block;color:var(--muted-foreground);font-size:.6rem;font-weight:700}
+.card-summary-box strong{display:block;margin-top:.25rem;font-family:var(--font-family-display);font-size:1.25rem;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.card-summary-box small{display:block;margin-top:.3rem;color:var(--muted-foreground);font-size:.56rem;line-height:1.4}
+.card-manager{display:grid;gap:.55rem}
+.card-manage-item{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);padding:.75rem}
+.card-manage-head{display:flex;justify-content:space-between;gap:.6rem;align-items:flex-start}
+.card-manage-head b{font-size:.72rem}
+.card-manage-head span{font-size:.58rem;color:var(--muted-foreground)}
+.card-manage-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.6rem}
+.card-manage-stats div{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.55rem;min-width:0}
+.card-manage-stats span{display:block;color:var(--muted-foreground);font-size:.52rem;font-weight:700}
+.card-manage-stats strong{display:block;margin-top:.16rem;font-size:.68rem;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-top:.6rem}
+.card-edit-grid label{display:grid;gap:.25rem;color:var(--muted-foreground);font-size:.55rem;font-weight:700}
+.card-edit-grid input{min-height:2.3rem}
+.unassigned-card{margin-top:.55rem;border-radius:var(--radius);background:color-mix(in srgb,var(--warning) 8%,var(--card));color:var(--warning);padding:.6rem;font-size:.58rem;line-height:1.45}
+.tx-card-field[hidden]{display:none!important}
+.installment-actions{display:flex;gap:.4rem;align-items:center}
+.installment-delete{border:0;background:transparent;color:var(--error);font-size:.55rem;font-weight:800;padding:.2rem}
+.installment-form-note{margin-top:.5rem;color:var(--muted-foreground);font-size:.56rem;line-height:1.45}
+.statement-chip{display:inline-flex;margin-left:.25rem;border-radius:999px;background:var(--muted);color:var(--muted-foreground);padding:.1rem .32rem;font-size:.48rem;font-weight:800}
+@media(max-width:34rem){
+  .card-summary-grid{grid-template-columns:1fr 1fr}
+  .card-manage-stats{grid-template-columns:1fr 1fr}
+  .card-edit-grid{grid-template-columns:1fr 1fr}
+}
+
+
+.home-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.home-kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;min-width:0}
+.home-kpi span{display:block;color:var(--muted);font-size:9px;font-weight:800}
+.home-kpi strong{display:block;margin-top:4px;font-size:16px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-kpi small{display:block;margin-top:3px;color:var(--muted);font-size:8px;line-height:1.35}
+.safe-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px}
+.safe-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.safe-head span{display:block;color:var(--muted);font-size:10px;font-weight:800}
+.safe-head strong{display:block;margin-top:4px;font-size:24px;letter-spacing:-.04em}
+.safe-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.safe-grid div{background:var(--soft);border-radius:11px;padding:9px;min-width:0}
+.safe-grid span{display:block;color:var(--muted);font-size:8px;font-weight:800}
+.safe-grid b{display:block;margin-top:3px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.safe-note{margin:9px 0 0;color:var(--muted);font-size:9px;line-height:1.5}
+.home-goal{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.home-goal span{display:block;color:var(--muted);font-size:9px;font-weight:800}
+.home-goal b{display:block;margin-top:3px;font-size:12px}
+.home-goal strong{font-size:11px;white-space:nowrap}
+.section-link{border:0;background:transparent;color:var(--muted);font-size:10px;font-weight:800;padding:4px}
+@media(max-width:520px){
+  .home-kpis{grid-template-columns:1fr 1fr}
+  .safe-grid{grid-template-columns:1fr 1fr 1fr}
+}
+
+
+.sync-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;background:var(--card);padding:6px 9px;color:var(--muted);font-size:9px;font-weight:850;cursor:pointer}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#aeb4bc}
+.sync-pill.online .sync-dot{background:var(--good)}
+.sync-pill.syncing .sync-dot{background:var(--warn)}
+.sync-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px}
+.sync-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.sync-head h2{margin:0;font-size:14px}
+.sync-head p{margin:4px 0 0;color:var(--muted);font-size:9px;line-height:1.45}
+.sync-status{flex:0 0 auto;border-radius:999px;background:var(--soft);padding:5px 8px;color:var(--muted);font-size:9px;font-weight:850}
+.sync-status.online{background:#edf8f2;color:var(--good)}
+.sync-login{display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:11px}
+.sync-login input{min-width:0}
+.sync-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.sync-user{margin-top:10px;border-radius:11px;background:var(--soft);padding:10px;font-size:9px;color:var(--muted)}
+.sync-user b{display:block;color:var(--text);font-size:10px;margin-bottom:3px;word-break:break-all}
+.sync-message{margin-top:9px;font-size:9px;line-height:1.5;color:var(--muted)}
+.sync-message.good{color:var(--good)}
+.sync-message.bad{color:var(--bad)}
+.sync-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.sync-meta div{background:var(--soft);border-radius:10px;padding:9px}
+.sync-meta span{display:block;color:var(--muted);font-size:8px;font-weight:800}
+.sync-meta b{display:block;margin-top:3px;font-size:10px}
+@media(max-width:520px){.sync-login{grid-template-columns:1fr}.sync-login .btn{width:100%}}
+
+
+.tx{cursor:pointer;border-radius:10px;padding-left:4px;padding-right:4px}
+.tx:hover,.tx:active{background:var(--soft)}
+.tx-edit-hint{display:block;margin-top:2px;color:var(--muted);font-size:7.5px;font-weight:700}
+.tx-actions{display:flex;gap:7px;margin-top:10px}
+.tx-actions .btn{flex:1}
+.data-manage{border:1px solid #f1d6d2;background:#fffdfc}
+.data-manage .danger-zone{margin-top:10px;padding-top:10px;border-top:1px dashed #e8c8c4}
+.data-manage .danger-zone b{display:block;font-size:10px;color:var(--bad)}
+.data-manage .danger-zone p{margin:4px 0 8px;font-size:8.5px;line-height:1.5;color:var(--muted)}
+.goal-separate{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.goal-separate div{background:var(--soft);border-radius:10px;padding:9px}
+.goal-separate span{display:block;font-size:8px;color:var(--muted);font-weight:800}
+.goal-separate b{display:block;margin-top:3px;font-size:11px}
+.recurring-note{margin-top:8px;padding:9px;border-radius:10px;background:#f7f8fa;color:var(--muted);font-size:8.5px;line-height:1.5}
+
+
+.cashflow-config summary{list-style:none;cursor:pointer}
+.cashflow-config summary::-webkit-details-marker{display:none}
+.cashflow-config summary:after{content:"설정 열기";float:right;color:var(--muted);font-size:9px;font-weight:850;margin-top:-17px}
+.cashflow-config[open] summary:after{content:"접기"}
+.cf-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.cf-summary div{background:var(--soft);border-radius:11px;padding:9px;min-width:0}
+.cf-summary span{display:block;color:var(--muted);font-size:8px;font-weight:800}
+.cf-summary b{display:block;margin-top:3px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cf-group{margin-top:12px}
+.cf-group h3{margin:0 0 6px;font-size:10px}
+.cf-row{display:grid;grid-template-columns:minmax(0,1fr) 76px 92px;gap:6px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.cf-row:first-child{border-top:0}
+.cf-row b{font-size:9px}
+.cf-row small{display:block;color:var(--muted);font-size:7.5px;margin-top:2px}
+.cf-row input,.cf-row select{min-height:34px;padding:6px 7px;font-size:9px}
+.cf-breakdown{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+.cf-breakdown-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:8.5px}
+.cf-breakdown-row span{color:var(--muted)}
+.safe-grid{grid-template-columns:repeat(4,1fr)}
+.import-row{display:flex;gap:7px;flex-wrap:wrap}
+.budget-edit-row{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.budget-edit-row:first-child{border-top:0}
+.budget-edit-row b{font-size:10px}
+.budget-edit-row input{min-height:36px}
+.statement-edit{display:flex;align-items:center;gap:7px}
+.statement-edit input{width:145px;min-height:34px;padding:6px 7px;font-size:9px}
+@media(max-width:520px){
+  .safe-grid{grid-template-columns:1fr 1fr}
+  .cf-summary{grid-template-columns:1fr 1fr}
+  .cf-row{grid-template-columns:minmax(0,1fr) 68px 86px}
+  .budget-edit-row{grid-template-columns:minmax(0,1fr) 120px}
+}
+
+
+.apartment-calc .hero-number{font-size:26px;font-weight:950;letter-spacing:-1.2px;margin-top:3px}
+.apartment-calc .hero-number.bad{color:var(--bad)}
+.apartment-calc .hero-number.good{color:var(--good)}
+.apartment-calc .calc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.apartment-calc .calc-item{padding:10px;border-radius:11px;background:var(--soft);min-width:0}
+.apartment-calc .calc-item span{display:block;font-size:8px;color:var(--muted);font-weight:800}
+.apartment-calc .calc-item b{display:block;margin-top:3px;font-size:12px;word-break:break-all}
+.apartment-calc .calc-line{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:9px}
+.apartment-calc .calc-line:first-child{border-top:0}
+.apartment-calc .calc-line span{color:var(--muted)}
+.apartment-calc .calc-line.total{font-weight:900;font-size:10px}
+.apartment-calc .calc-line.total span{color:var(--text)}
+.apartment-calc .gap-note{margin-top:10px;padding:10px;border-radius:11px;background:#fff8f5;border:1px solid #efd5cb;font-size:9px;line-height:1.55}
+.apartment-calc .gap-note b{color:var(--bad)}
+.apartment-calc .plan-progress{margin-top:10px}
+.apartment-calc .plan-progress-head{display:flex;justify-content:space-between;gap:8px;font-size:8.5px;font-weight:850;margin-bottom:5px}
+.apartment-calc .plan-progress-head span{color:var(--muted)}
+.apartment-calc .plan-progress .bar{height:9px}
+.apartment-plan-inputs{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.apartment-plan-inputs .input-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:520px){
+  .apartment-calc .calc-grid{grid-template-columns:1fr 1fr}
+  .apartment-plan-inputs .input-grid{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">WONI MONEY<small>내 가계부</small></div>
+    <div style="display:flex;align-items:center;gap:7px">
+      <button class="sync-pill" id="syncPill" type="button"><span class="sync-dot"></span><span id="syncPillText">로컬 저장</span></button>
+      <div class="month-picker">
+        <button id="prevMonth" type="button">‹</button>
+        <b id="monthTitle">2026.09</b>
+        <button id="nextMonth" type="button">›</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="install-banner" id="installBanner">
+    <div><b>홈 화면에 설치</b>핸드폰에서 앱처럼 바로 열 수 있어.</div>
+    <button class="btn primary" id="installBtn" type="button">설치</button>
+  </div>
+
+  <main>
+    <section id="view-home" class="view active">
+      <div class="stack">
+        <div class="card hero">
+          <div class="eyebrow">이번 달 생활비 남음</div>
+          <div class="big" id="livingRemain">₩0</div>
+          <div class="sub" id="homeSub">식비·주유·데이트·쇼핑 기준</div>
+        </div>
+
+        <div class="home-kpis">
+          <div class="home-kpi">
+            <span>오늘 지출</span>
+            <strong class="bad" id="todaySpend">₩0</strong>
+            <small id="todaySpendSub">2026.09.28</small>
+          </div>
+          <div class="home-kpi">
+            <span id="monthSpendLabel">이번 달 지출</span>
+            <strong id="homeExpense">₩0</strong>
+            <small id="monthSpendSub">전체 지출</small>
+          </div>
+          <div class="home-kpi">
+            <span>다음 월급일</span>
+            <strong id="nextSalaryDate">-</strong>
+            <small id="salaryCountdown">매월 25일</small>
+          </div>
+          <div class="home-kpi">
+            <span>최근 확정 카드값</span>
+            <strong id="homeCardBill">₩0</strong>
+            <small id="homeCardBillSub">2026.10 명세서</small>
+          </div>
+        </div>
+
+        <div class="quick-row">
+          <button class="quick-btn" data-quick="식비" type="button"><span class="ico">🍚</span>식비</button>
+          <button class="quick-btn" data-quick="주유" type="button"><span class="ico">⛽</span>주유</button>
+          <button class="quick-btn" data-quick="데이트" type="button"><span class="ico">☕</span>데이트</button>
+          <button class="quick-btn" data-quick="쇼핑·생활" type="button"><span class="ico">🛍</span>쇼핑</button>
+        </div>
+
+        <div class="safe-card">
+          <div class="safe-head">
+            <div>
+              <span id="safeCashTitle">다음 월급일까지 확정분 기준 여유</span>
+              <strong id="safeCashAmount">입력 필요</strong>
+            </div>
+            <button class="btn ghost" id="safeCashAction" type="button">현금 입력</button>
+          </div>
+          <div class="safe-grid">
+            <div><span>현재 통장 현금</span><b id="safeCashCurrent">₩0</b></div>
+            <div><span>월급 전 확정 유출</span><b id="safeCashBills">₩0</b></div>
+            <div><span>확정 입금 예정</span><b id="safeCashInflows">₩0</b></div><div><span>비상금 예약</span><b id="safeCashReserve">₩0</b></div>
+          </div>
+          <p class="safe-note" id="safeCashNote">현재 통장 현금을 입력하면 카드값과 비상금 100만원을 우선 빼서 1차 여유를 계산해.</p>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <h2>최근 내역</h2>
+            <button class="section-link" type="button" data-nav="ledger">전체보기</button>
+          </div>
+          <div class="tx-list" id="homeRecent"></div>
+        </div>
+
+        <div class="home-goal">
+          <div><span>2028.02 아파트자금</span><b id="homeGoalText">현재 입력 ₩0</b><small id="homeFutureText" style="display:block;margin-top:3px;color:var(--muted);font-size:8px">미래적금은 별도 자산</small></div>
+          <strong id="homeGoalRemain">목표를 입력해줘</strong>
+        </div>
+
+        <details class="card current-status">
+      <summary class="status-summary-toggle">
+        <div class="status-head"><div><span>개인 데이터</span><h2>로그인 또는 JSON 백업을 불러오면 표시돼</h2></div><div class="status-badge">PRIVATE</div></div>
+        <div class="status-mini"><div><span>저장</span><b>로컬 + Supabase</b></div><div><span>공개 코드</span><b>개인 수치 없음</b></div><div><span>동기화</span><b>로그인 사용자만</b></div></div>
+      </summary>
+      <div class="status-details"><p class="status-summary">GitHub Pages에는 앱 코드만 공개되고, 실제 금융 데이터는 브라우저 저장소 또는 로그인한 사용자의 Supabase 행에 저장돼.</p></div>
+    </details>
+      </div>
+    </section>
+
+    <section id="view-ledger" class="view">
+      <div class="stack">
+        <div class="metric-grid">
+          <div class="metric"><span>수입</span><strong class="good" id="ledgerIncome">₩0</strong><small>입력 없으면 월급 예상액 사용</small></div>
+          <div class="metric"><span>지출</span><strong class="bad" id="ledgerExpense">₩0</strong><small>카드 사용 시점 기준</small></div>
+        </div>
+        <div class="card">
+          <div class="section-head"><h2>이번 달 내역</h2><small>내역을 눌러 수정·삭제</small></div>
+          <div class="tx-list" id="ledgerList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-budget" class="view">
+      <div class="stack">
+        <div class="card">
+          <div class="plan-main">
+            <div><span>선택한 달 예상 잔액</span><strong id="planBalance">-</strong></div>
+            <div class="plan-status" id="planStatus"></div>
+          </div>
+          <div class="plan-list" id="planList"></div>
+          <div class="note">월급에서 고정·대출·잠금저축·아파트자금·생활비 목표·해당 월 할부를 모두 반영한 계획값.</div>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><h2>자동 예정 내역</h2><small id="autoScheduleMonth">선택월 자동 생성</small></div>
+          <div id="autoSchedule" class="schedule-list"></div>
+          <div class="automation-note">월급일 25일은 확정값이야. 아래 ‘결제일 · 현금흐름 설정’에서 실제 날짜와 결제수단을 넣으면 다음 월급일까지의 확정 현금흐름에 반영돼. 카드 결제는 카드대금과 중복 차감하지 않아.</div>
+        </div>
+
+        <details class="card cashflow-config">
+          <summary>
+            <div class="section-head"><h2>결제일 · 현금흐름 설정</h2><small id="cashflowCompleteness">미설정 항목 확인 필요</small></div>
+            <div class="cf-summary">
+              <div><span>다음 월급일</span><b id="cfNextPayday">-</b></div>
+              <div><span>월급 전 확정 유출</span><b id="cfOutflow">₩0</b></div>
+              <div><span>미설정 항목</span><b id="cfUnknown">0개</b></div>
+            </div>
+          </summary>
+          <div class="automation-note">실제 날짜를 아는 항목만 입력해. 임의 날짜는 넣지 않아. 카드로 결제되는 고정비는 ‘카드’로 설정하면 통장 현금흐름에서 별도로 차감하지 않아 카드대금과 중복 계산되지 않아.</div>
+          <div id="cashflowSettings"></div>
+          <div class="cf-breakdown" id="cashflowBreakdown"></div>
+        </details>
+
+        <div class="card">
+          <div class="section-head"><h2>고정·준고정비</h2><small>현재 기준</small></div>
+          <div id="fixedList"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><h2>생활비 목표</h2><small>금액 직접 수정 가능</small></div>
+          <div id="budgetEditor"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-cards" class="view">
+      <div class="stack">
+        <div class="card-summary-grid">
+          <div class="card-summary-box">
+            <span>선택월 실제 카드 사용액</span>
+            <strong id="selectedCardSpend">₩0</strong>
+            <small>가계부에 신용카드로 직접 입력한 금액</small>
+          </div>
+          <div class="card-summary-box">
+            <span>최근 확정 카드 청구액</span>
+            <strong id="cardBillTotal">₩0</strong>
+            <small id="billMonthLabel">2026.10 명세서 기준</small>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <h2>카드별 현황</h2>
+            <div class="statement-edit"><small>확정 명세서 월</small><input id="statementMonthInput" type="month"></div>
+          </div>
+          <div id="billList" class="card-manager"></div>
+          <div id="unassignedCardNote" class="unassigned-card" hidden></div>
+          <div class="note">카드 사용은 결제한 날 지출로 기록하고, 카드대금이 통장에서 빠지는 날에는 다시 지출로 잡지 않아. ‘실제 카드 사용액’과 ‘확정 청구액’을 분리해서 보는 이유야.</div>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><h2>무이자 할부</h2><button class="btn ghost" id="addInstallmentBtn" type="button">+ 할부 추가</button></div>
+          <small id="installmentBasis" class="bill-sub">회차·잔액 자동 감소</small>
+          <div id="installmentList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-assets" class="view">
+      <div class="stack">
+        <div class="card goal-card">
+          <div class="goal-top">
+            <div><span>2028.02 아파트자금</span><strong id="goalNow">₩0</strong></div>
+            <div class="goal-pct"><span id="goalPct">0%</span> / <span id="goalTargetText">0원</span></div>
+          </div>
+          <div class="bar"><i id="goalBar" style="width:0%"></i></div>
+          <div class="goal-separate">
+            <div><span>아파트자금 목표 반영</span><b id="goalApartmentOnly">₩0</b></div>
+            <div><span>미래적금 · 별도 자산</span><b id="goalFutureSeparate">₩0</b></div>
+          </div>
+        </div>
+
+        <div class="card apartment-calc">
+          <div class="section-head">
+            <h2>2028 입주자금 계산기</h2>
+            <small>현재 계약 기준 · 금액 직접 수정 가능</small>
+          </div>
+
+          <span style="font-size:8px;color:var(--muted);font-weight:800">앞으로 필요한 입주 현금</span>
+          <div id="aptMoveInNeed" class="hero-number">₩0</div>
+
+          <div class="calc-grid">
+            <div class="calc-item"><span>총 주택·옵션 비용</span><b id="aptTotalCost">₩0</b></div>
+            <div class="calc-item"><span>정책대출 예상</span><b id="aptPolicyLoan">₩0</b></div>
+            <div class="calc-item"><span>이미 낸 계약금</span><b id="aptContractPaid">₩0</b></div>
+            <div class="calc-item"><span>취득·등기 예비비</span><b id="aptClosingReserve">₩0</b></div>
+          </div>
+
+          <div class="plan-progress">
+            <div class="plan-progress-head"><span>우리 아파트자금 목표</span><b id="aptSavingGoalLabel">₩0</b></div>
+            <div class="bar"><i id="aptSavingGoalBar" style="width:0%"></i></div>
+          </div>
+
+          <div style="margin-top:11px">
+            <div class="calc-line"><span>분양가</span><b id="aptPurchaseLine">₩0</b></div>
+            <div class="calc-line"><span>프리미엄</span><b id="aptPremiumLine">₩0</b></div>
+            <div class="calc-line"><span>확장비</span><b id="aptExtensionLine">₩0</b></div>
+            <div class="calc-line"><span>에어컨</span><b id="aptAirconLine">₩0</b></div>
+            <div class="calc-line total"><span>총 비용</span><b id="aptTotalLine">₩0</b></div>
+            <div class="calc-line"><span>정책대출 차감</span><b id="aptLoanLine">-₩0</b></div>
+            <div class="calc-line"><span>기납부 계약금 차감</span><b id="aptPaidLine">-₩0</b></div>
+            <div class="calc-line"><span>취득·등기 예비비 추가</span><b id="aptClosingLine">+₩0</b></div>
+            <div class="calc-line total"><span>지금부터 준비할 총 현금</span><b id="aptNeedLine">₩0</b></div>
+          </div>
+
+          <div class="gap-note" id="aptGapNote">
+            입주 계산 기준을 입력하면 부족액을 자동 계산해.
+          </div>
+
+          <div class="goal-separate">
+            <div><span>현재 아파트자금 누적</span><b id="aptCurrentFund">₩0</b></div>
+            <div><span>기타 확보자금</span><b id="aptOtherFunds">₩0</b></div>
+            <div><span>현재 기준 남은 입주자금</span><b id="aptCurrentGap">₩0</b></div>
+            <div><span>목표 달성 후 부족액</span><b id="aptGoalGap">₩0</b></div>
+          </div>
+
+          <div class="apartment-plan-inputs">
+            <div class="section-head"><h2>입주 계산 기준 수정</h2><small>법·대출조건 변경 시 여기만 수정</small></div>
+            <div class="input-grid">
+              <div class="field"><label>분양가</label><input id="aptPurchasePrice" type="number" min="0"></div>
+              <div class="field"><label>프리미엄</label><input id="aptPremium" type="number" min="0"></div>
+              <div class="field"><label>확장비</label><input id="aptExtension" type="number" min="0"></div>
+              <div class="field"><label>에어컨</label><input id="aptAircon" type="number" min="0"></div>
+              <div class="field"><label>정책대출 예상액</label><input id="aptPolicyLoanInput" type="number" min="0"></div>
+              <div class="field"><label>이미 낸 계약금</label><input id="aptContractPaidInput" type="number" min="0"></div>
+              <div class="field"><label>취득·등기 예비비</label><input id="aptClosingReserveInput" type="number" min="0"></div>
+              <div class="field"><label>기타 확보자금</label><input id="aptOtherSecuredFunds" type="number" min="0"></div>
+              <div class="field"><label>우리 아파트자금 목표</label><input id="aptSavingGoalInput" type="number" min="0"></div>
+            </div>
+            <div class="inline-actions">
+              <button class="btn primary" id="saveApartmentPlan" type="button">입주 계산 저장</button>
+            </div>
+            <div class="note">분양가·옵션·예상 정책대출·기납부 계약금·취득/등기 예비비를 입력하면 입주 필요현금을 자동 계산해.</div>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><span>대출 총잔액</span><strong id="bankDebtMetric">₩0</strong><small>로그인 데이터 기준</small></div>
+          <div class="metric"><span>월 상환 예상</span><strong id="loanMonthlySnapshot">₩0</strong><small>로그인 데이터 기준</small></div>
+          <div class="metric"><span>무이자 할부</span><strong id="installDebtMetric">₩0</strong><small>카드 할부 별도</small></div>
+        </div>
+        <div class="card">
+          <div class="section-head"><h2>대출</h2><small>로그인 데이터 기준</small></div>
+          <div id="loanList"></div>
+        </div>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><h2>현재 자산 입력</h2><small>목표 계산용</small></div>
+          <div class="input-grid">
+            <div class="field"><label>예비신부 아파트자금 누적</label><input id="apartmentFund" type="number" min="0"></div>
+            <div class="field"><label>미래적금 현재 잔액</label><input id="futureSavingBalance" type="number" min="0"></div>
+            <div class="field"><label>현재 통장 현금</label><input id="cashBalance" type="number" min="0"></div>
+            <div class="field"><label>월 실수령</label><input id="monthlySalary" type="number" min="0"></div>
+            <div class="field"><label>비상금 예약액</label><input id="emergencyReserve" type="number" min="0"></div>
+          </div>
+          <div class="inline-actions">
+            <button class="btn primary" id="saveAssets" type="button">자산 입력 저장</button>
+          </div>
+          <div class="note">로그아웃 상태에서는 이 기기에 저장하고, 로그인 상태에서는 로컬 + Supabase에 같이 저장해.</div>
+        </div>
+
+        <div class="card data-manage">
+          <div class="section-head"><h2>데이터 관리</h2><small>백업·삭제는 여기서만</small></div>
+          <div class="import-row">
+            <button class="btn ghost" id="exportBtn" type="button">JSON 백업 내보내기</button>
+            <button class="btn ghost" id="importBtn" type="button">JSON 백업 불러오기</button>
+            <input id="importFile" type="file" accept="application/json,.json" hidden>
+          </div>
+          <div class="recurring-note">등록한 반복결제는 지정일이 되면 해당 월 실제 지출로 자동 생성돼. 같은 반복내역은 중복 생성하지 않아.</div>
+          <div class="danger-zone">
+            <b>위험 작업</b>
+            <p>선택한 달 전체 내역 삭제와 전체 초기화는 되돌리기 어려워. 백업 후 사용하는 걸 권장해.</p>
+            <div class="inline-actions">
+              <button class="btn danger" id="clearMonth" type="button">선택한 달 내역 삭제</button>
+              <button class="btn danger" id="resetBtn" type="button">전체 데이터 초기화</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-head">
+            <div>
+              <h2>무료 PC ↔ 핸드폰 동기화</h2>
+              <p>Supabase Free 로그인 후 같은 계정으로 접속하면 가계부가 자동으로 이어져.</p>
+            </div>
+            <div class="sync-status" id="syncStatus">로그아웃</div>
+          </div>
+
+          <div id="syncSignedOut">
+            <div class="sync-login">
+              <input id="syncEmail" type="email" autocomplete="email" placeholder="로그인할 이메일">
+              <button class="btn primary" id="sendMagicLink" type="button">로그인 링크 받기</button>
+            </div>
+            <div class="sync-message" id="syncLoginMessage">HTTPS 배포 후 HTTPS 주소에서 사용해. 배포 주소를 Supabase Auth Redirect URL에 한 번 등록하면 이메일 링크 로그인이 가능해.</div>
+          </div>
+
+          <div id="syncSignedIn" hidden>
+            <div class="sync-user"><b id="syncUserEmail">-</b><span>RLS 적용: 이 로그인 사용자의 가계부 데이터만 읽고 쓸 수 있어.</span></div>
+            <div class="sync-meta">
+              <div><span>마지막 클라우드 동기화</span><b id="lastCloudSync">-</b></div>
+              <div><span>저장 방식</span><b>로컬 + Supabase</b></div>
+            </div>
+            <div class="sync-actions">
+              <button class="btn primary" id="syncNowBtn" type="button">지금 동기화</button>
+              <button class="btn ghost" id="signOutBtn" type="button">로그아웃</button>
+            </div>
+            <div class="sync-message" id="syncMessage"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<button class="fab" id="addBtn" type="button" aria-label="내역 추가">＋</button>
+
+<nav class="bottom-nav">
+  <button class="active" data-view="home" type="button"><span>⌂</span>홈</button>
+  <button data-view="ledger" type="button"><span>🧾</span>내역</button>
+  <button data-view="budget" type="button"><span>◎</span>예산</button>
+  <button data-view="cards" type="button"><span>💳</span>카드</button>
+  <button data-view="assets" type="button"><span>🏠</span>자산</button>
+</nav>
+
+<dialog id="txDialog">
+  <form class="sheet" id="txForm">
+    <h3 id="txDialogTitle">내역 추가</h3>
+    <div class="type-switch">
+      <button type="button" data-type="expense" class="active">지출</button>
+      <button type="button" data-type="income">수입</button>
+      <button type="button" data-type="transfer">저축·이체</button>
+    </div>
+    <div class="input-grid">
+      <div class="field" style="grid-column:1/-1"><label>금액</label><input id="txAmount" type="number" min="1" inputmode="numeric" placeholder="0" required></div>
+      <div class="field"><label>분류</label><select id="txCategory"></select></div>
+      <div class="field"><label>결제수단</label><select id="txMethod"><option>신용카드</option><option>체크카드</option><option>계좌이체</option><option>현금</option></select></div>
+      <div class="field tx-card-field" id="txCardField"><label>사용 카드</label><select id="txCard"></select></div>
+      <div class="field"><label>날짜</label><input id="txDate" type="date" required></div>
+      <div class="field"><label>메모</label><input id="txMemo" type="text" placeholder="선택"></div>
+    </div>
+    <div class="tx-actions">
+      <button type="button" class="btn danger" id="deleteTxBtn" hidden>삭제</button>
+      <button type="button" class="btn ghost" id="cancelDialog">취소</button>
+      <button type="submit" class="btn primary" id="txSubmitBtn">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="installmentDialog">
+  <form class="sheet" id="installmentForm">
+    <h3>무이자 할부 추가</h3>
+    <div class="input-grid">
+      <div class="field" style="grid-column:1/-1"><label>항목명</label><input id="instName" type="text" placeholder="예: 가전제품" required></div>
+      <div class="field"><label>카드</label><select id="instCard"></select></div>
+      <div class="field"><label>월 납부액</label><input id="instMonthly" type="number" min="1" inputmode="numeric" required></div>
+      <div class="field"><label>총 할부 개월</label><input id="instTotal" type="number" min="2" max="60" required></div>
+      <div class="field"><label>선택월 회차</label><input id="instCurrentNo" type="number" min="1" required></div>
+    </div>
+    <div class="installment-form-note">현재 선택한 달을 기준월로 저장해. 예를 들어 12개월 할부 중 이번 달이 4회차면 ‘4’를 입력하면 다음 달부터 5/12회차로 자동 증가해.</div>
+    <div class="sheet-actions">
+      <button type="button" class="btn ghost" id="cancelInstallment">취소</button>
+      <button type="submit" class="btn primary">추가</button>
+    </div>
+  </form>
+</dialog>
+<script>
+(() => {
+  const KEY='woni-money-v11-free-sync';
+  const OLD_KEYS=['woni-money-v09-free','woni-money-v08-free','woni-money-v05-free','woni-money-v04','woni-money-v03-ledger','woni-money-v02'];
+  const fmt=n=>'₩'+Math.round(Number(n)||0).toLocaleString('ko-KR');
+  const pad=n=>String(n).padStart(2,'0');
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const today=new Date();
+  const defaults={
+    y:today.getFullYear(),m:today.getMonth()+1,
+    salary:0,livingBudget:0,salaryDay:25,emergencyReserve:0,updatedAt:null,cashflowSettings:{},
+    apartmentFund:0,futureSavingBalance:0,cashBalance:0,
+    apartmentPlan:{
+      purchasePrice:0,
+      premium:0,
+      extension:0,
+      aircon:0,
+      policyLoan:0,
+      contractPaid:0,
+      closingReserve:0,
+      otherSecuredFunds:0,
+      savingGoal:0
+    },
+    tx:[],
+    recurringRules:[],
+    categoryBudgets:{'식비':0,'주유':0,'데이트':0,'쇼핑·생활':0},
+    statementMonth:'',
+    cards:[],
+    installments:[],
+    fixedItems:[],
+    loanMonthlyItems:[],
+    lockedItems:[],
+    loans:[],
+    loanSnapshotMonthly:0
+  };
+  let fixed=[];
+  let loanMonthly=[];
+  let locked=[];
+  let loans=[];
+  let loanSnapshotMonthly=0;
+  let state=load(), txType='expense', deferredPrompt=null, editingTxId=null;
+  const SUPABASE_URL='https://xsseuzkmbfhtgjnipuiq.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_qk-BUD2WXEkizOEdPv_7Mw_R6aNjbUV';
+  const cloud=window.supabase?.createClient
+    ? window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})
+    : null;
+  let cloudUser=null,syncTimer=null,syncBusy=false,lastCloudSyncAt=null,suppressCloudPush=false;
+
+  function clone(o){return JSON.parse(JSON.stringify(o))}
+  function applyKnownDataUpdates(base){ return base; }
+
+  function normalizeState(raw){
+    const base={...clone(defaults),...raw};
+    base.categoryBudgets={...defaults.categoryBudgets,...(raw.categoryBudgets||{})};
+    base.cashflowSettings=(raw.cashflowSettings&&typeof raw.cashflowSettings==='object')?raw.cashflowSettings:{};
+    base.apartmentPlan={...defaults.apartmentPlan,...((raw.apartmentPlan&&typeof raw.apartmentPlan==='object')?raw.apartmentPlan:{})};
+    base.tx=Array.isArray(raw.tx)?raw.tx:(Array.isArray(raw.transactions)?raw.transactions:[]);
+    base.cards=Array.isArray(raw.cards)?raw.cards:clone(defaults.cards);
+    base.installments=Array.isArray(raw.installments)?raw.installments:clone(defaults.installments);
+    base.fixedItems=Array.isArray(raw.fixedItems)?clone(raw.fixedItems):clone(defaults.fixedItems);
+    base.loanMonthlyItems=Array.isArray(raw.loanMonthlyItems)?clone(raw.loanMonthlyItems):clone(defaults.loanMonthlyItems);
+    base.lockedItems=Array.isArray(raw.lockedItems)?clone(raw.lockedItems):clone(defaults.lockedItems);
+    base.loans=Array.isArray(raw.loans)?clone(raw.loans):clone(defaults.loans);
+    base.loanSnapshotMonthly=Number(raw.loanSnapshotMonthly)||0;
+    fixed=clone(base.fixedItems);
+    loanMonthly=clone(base.loanMonthlyItems);
+    locked=clone(base.lockedItems);
+    loans=clone(base.loans);
+    loanSnapshotMonthly=base.loanSnapshotMonthly;
+    if(Array.isArray(raw.cardBills) && !Array.isArray(raw.cards)){
+      base.cards=defaults.cards.map((c,i)=>({...c,nextBillAmount:Number(raw.cardBills[i]?.amount??c.nextBillAmount)}));
+    }
+    base.tx=base.tx.map(t=>{
+      if(t.cardId) return t;
+      if(t.method==='신용카드'){
+        const memo=String(t.memo||'')+' '+String(t.category||'');
+        let cardId=null;
+        if(memo.includes('하나')) cardId='hana';
+        else if(memo.includes('신한')) cardId='shinhan';
+        else if(memo.includes('우리')) cardId='woori';
+        else if(memo.includes('NOL')||memo.includes('놀')) cardId='nol';
+        return {...t,cardId};
+      }
+      return {...t,cardId:null};
+    });
+    return applyKnownDataUpdates(base);
+  }
+  function recurringDate(y,m,day){
+    const last=new Date(y,m,0).getDate();
+    return `${y}-${pad(m)}-${pad(Math.min(day,last))}`;
+  }
+  function ensureRecurringTransactions(now=new Date()){
+    state.recurringRules=Array.isArray(state.recurringRules)?state.recurringRules:[];
+    state.tx=Array.isArray(state.tx)?state.tx:[];
+    let added=0;
+    const currentIndex=now.getFullYear()*12+now.getMonth();
+
+    for(const rule of state.recurringRules){
+      if(!rule.active)continue;
+      const sy=Number(rule.startY||now.getFullYear()), sm=Number(rule.startM||1);
+      const startIndex=sy*12+(sm-1);
+
+      for(let idx=startIndex;idx<=currentIndex;idx++){
+        const y=Math.floor(idx/12),m=(idx%12)+1;
+        const date=recurringDate(y,m,Number(rule.day||1));
+        const due=new Date(`${date}T23:59:59`);
+        if(due>now)continue;
+
+        const exists=state.tx.some(t=>
+          t.recurringRuleId===rule.id && t.date===date
+        ) || state.tx.some(t=>
+          t.date===date &&
+          Number(t.amount)===Number(rule.amount) &&
+          String(t.memo||'')===String(rule.name||'')
+        );
+        if(exists)continue;
+
+        state.tx.push({
+          id:`recurring-${rule.id}-${date}`,
+          type:rule.type||'expense',
+          amount:Number(rule.amount)||0,
+          category:rule.category||'기타',
+          method:rule.method||'미확인',
+          cardId:rule.cardId||null,
+          date,
+          memo:rule.name||'반복결제',
+          created:new Date(`${date}T12:00:00`).getTime(),
+          recurringRuleId:rule.id,
+          source:'recurring-auto'
+        });
+        added++;
+      }
+    }
+    if(added){
+      state.updatedAt=new Date().toISOString();
+      localStorage.setItem(KEY,JSON.stringify(state));
+    }
+    return added;
+  }
+  function load(){
+    try{
+      const cur=JSON.parse(localStorage.getItem(KEY)||'null');
+      if(cur) return normalizeState(cur);
+      for(const k of OLD_KEYS){
+        const old=JSON.parse(localStorage.getItem(k)||'null');
+        if(!old) continue;
+        if(k==='woni-money-v03-ledger'){
+          return normalizeState({...clone(defaults),apartmentFund:Number(old.apartmentFund||0),futureSavingBalance:Number(old.futureSavingBalance||0),cashBalance:Number(old.cashBalance||0),salary:Number(old.monthlySalary||3200000),tx:(old.transactions||[]).map(t=>({...t,id:t.id||String(Math.random())}))});
+        }
+        if(k==='woni-money-v02'){
+          return normalizeState({...clone(defaults),apartmentFund:Number(old.currentApartmentFund||0),futureSavingBalance:Number(old.currentFutureSaving||0),cashBalance:Number(old.currentCash||0),salary:Number(old.settings?.salary||3200000),tx:(old.transactions||[]).map(t=>({...t,id:t.id||String(Math.random()),type:t.type||'expense'}))});
+        }
+        return normalizeState(old);
+      }
+    }catch(e){}
+    return applyKnownDataUpdates(clone(defaults));
+  }
+  function save(options={}){
+    if(!options.keepTimestamp)state.updatedAt=new Date().toISOString();
+    localStorage.setItem(KEY,JSON.stringify(state));
+    if(!options.localOnly)scheduleCloudPush();
+  }
+  function scheduleCloudPush(){
+    if(!cloudUser||suppressCloudPush)return;
+    clearTimeout(syncTimer);
+    syncTimer=setTimeout(()=>pushCloudState(false),500);
+    renderSyncStatus('syncing');
+  }
+  function hasMeaningfulLocalData(st){
+    return !!(
+      (Array.isArray(st.tx)&&st.tx.length)||
+      Number(st.apartmentFund)||Number(st.futureSavingBalance)||Number(st.cashBalance)||
+      Number(st.salary)!==3200000||
+      JSON.stringify(st.cards||[])!==JSON.stringify(defaults.cards)
+    );
+  }
+  function renderSyncStatus(mode){
+    const pill=$('#syncPill'),status=$('#syncStatus');
+    if(!pill||!status)return;
+    pill.classList.remove('online','syncing');
+    status.classList.remove('online');
+    if(mode==='syncing'){
+      pill.classList.add('syncing');
+      $('#syncPillText').textContent='동기화 중';
+      status.textContent='동기화 중';
+    }else if(cloudUser){
+      pill.classList.add('online');
+      $('#syncPillText').textContent='동기화됨';
+      status.classList.add('online');
+      status.textContent='로그인됨';
+    }else{
+      $('#syncPillText').textContent='로컬 저장';
+      status.textContent='로그아웃';
+    }
+  }
+  function renderSyncPanel(){
+    const signed=!!cloudUser;
+    $('#syncSignedOut').hidden=signed;
+    $('#syncSignedIn').hidden=!signed;
+    if(signed){
+      $('#syncUserEmail').textContent=cloudUser.email||'로그인 사용자';
+      $('#lastCloudSync').textContent=lastCloudSyncAt
+        ? new Date(lastCloudSyncAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})
+        : '아직 없음';
+    }
+    renderSyncStatus();
+  }
+  async function writeCloudState(){
+    if(!state.updatedAt)state.updatedAt=new Date().toISOString();
+    const {error}=await cloud.from('finance_state').upsert(
+      {user_id:cloudUser.id,state,client_updated_at:state.updatedAt},
+      {onConflict:'user_id'}
+    );
+    if(error)throw error;
+    lastCloudSyncAt=new Date().toISOString();
+  }
+  async function pushCloudState(showMessage=true){
+    if(!cloud||!cloudUser||syncBusy)return;
+    syncBusy=true;renderSyncStatus('syncing');
+    try{
+      await writeCloudState();
+      if(showMessage){
+        $('#syncMessage').textContent='현재 기기 데이터를 클라우드에 저장했어.';
+        $('#syncMessage').className='sync-message good';
+      }
+    }catch(err){
+      $('#syncMessage').textContent='동기화 실패: '+(err?.message||'알 수 없는 오류');
+      $('#syncMessage').className='sync-message bad';
+    }finally{
+      syncBusy=false;
+      renderSyncPanel();
+    }
+  }
+  async function pullOrSeedCloud(){
+    if(!cloud||!cloudUser||syncBusy)return;
+    syncBusy=true;renderSyncStatus('syncing');
+    try{
+      const {data,error}=await cloud
+        .from('finance_state')
+        .select('state,client_updated_at,updated_at')
+        .eq('user_id',cloudUser.id)
+        .maybeSingle();
+      if(error)throw error;
+
+      if(!data){
+        await writeCloudState();
+        $('#syncMessage').textContent='이 기기의 기존 가계부를 첫 클라우드 데이터로 올렸어.';
+        $('#syncMessage').className='sync-message good';
+      }else{
+        const cloudState=normalizeState(data.state||{});
+        const localHas=hasMeaningfulLocalData(state);
+        const localTs=state.updatedAt?Date.parse(state.updatedAt):0;
+        const cloudTs=Date.parse(data.client_updated_at||data.updated_at||0)||0;
+
+        if(!localHas||!localTs||cloudTs>localTs){
+          localStorage.setItem('woni-money-precloud-backup',JSON.stringify(state));
+          suppressCloudPush=true;
+          state=cloudState;
+          if(!state.updatedAt)state.updatedAt=data.client_updated_at||data.updated_at||new Date().toISOString();
+          localStorage.setItem(KEY,JSON.stringify(state));
+          suppressCloudPush=false;
+          ensureRecurringTransactions(new Date());
+          refreshCardOptions();
+          render();
+          $('#syncMessage').textContent='클라우드의 최신 가계부를 이 기기로 불러왔어.';
+          $('#syncMessage').className='sync-message good';
+        }else if(localTs>cloudTs){
+          await writeCloudState();
+          $('#syncMessage').textContent='이 기기의 더 최신 데이터를 클라우드에 반영했어.';
+          $('#syncMessage').className='sync-message good';
+        }else{
+          $('#syncMessage').textContent='로컬과 클라우드가 같은 상태야.';
+          $('#syncMessage').className='sync-message good';
+          lastCloudSyncAt=new Date().toISOString();
+        }
+      }
+    }catch(err){
+      $('#syncMessage').textContent='클라우드 불러오기 실패: '+(err?.message||'알 수 없는 오류');
+      $('#syncMessage').className='sync-message bad';
+    }finally{
+      syncBusy=false;
+      renderSyncPanel();
+    }
+  }
+
+  function registerOfflineSupport(){
+    window.addEventListener('offline',()=>{
+      if($('#syncPillText'))$('#syncPillText').textContent='오프라인';
+      if($('#syncLoginMessage')&&!cloudUser){
+        $('#syncLoginMessage').textContent='오프라인이야. 입력은 이 기기에 계속 저장되고, 인터넷이 돌아오면 다시 동기화할 수 있어.';
+      }
+    });
+    window.addEventListener('online',()=>{
+      renderSyncPanel();
+      if(cloudUser)pushCloudState(false);
+    });
+  }
+
+  async function initCloud(){
+    if(!cloud){
+      $('#syncLoginMessage').textContent='Supabase 라이브러리를 불러오지 못했어. 인터넷 연결을 확인해줘.';
+      $('#syncLoginMessage').className='sync-message bad';
+      return;
+    }
+    const {data:{session}}=await cloud.auth.getSession();
+    cloudUser=session?.user||null;
+    renderSyncPanel();
+    if(cloudUser)await pullOrSeedCloud();
+
+    cloud.auth.onAuthStateChange((event,session)=>{
+      cloudUser=session?.user||null;
+      renderSyncPanel();
+      if(event==='SIGNED_IN'&&cloudUser)setTimeout(()=>pullOrSeedCloud(),0);
+      if(event==='SIGNED_OUT'){
+        lastCloudSyncAt=null;
+        if($('#syncMessage'))$('#syncMessage').textContent='';
+      }
+    });
+  }
+  function monthKey(){return `${state.y}-${pad(state.m)}`}
+  function monthTx(){return state.tx.filter(t=>(t.date||'').startsWith(monthKey()))}
+  function sum(arr){return arr.reduce((a,t)=>a+Number(t.amount||0),0)}
+  function exp(){return monthTx().filter(t=>t.type==='expense')}
+  function inc(){return monthTx().filter(t=>t.type==='income')}
+  function trf(){return monthTx().filter(t=>t.type==='transfer')}
+  function liveSpent(){return exp().filter(t=>['식비','주유','데이트','쇼핑·생활'].includes(t.category)).reduce((a,t)=>a+Number(t.amount||0),0)}
+  function icon(c){return {'식비':'🍚','주유':'⛽','데이트':'☕','쇼핑·생활':'🛍','구독':'💻','차량':'🚗','결혼':'💍','기타':'•','급여':'💰','경비정산':'🧾','기타수입':'＋','미래적금':'🏦','퇴직연금':'📈','아파트자금':'🏠','계좌이동':'↔'}[c]||'•'}
+  function monthIndex(y,m){return y*12+(m-1)}
+  function installmentInfo(plan,y,m){
+    const offset=monthIndex(y,m)-monthIndex(plan.startY,plan.startM);
+    const no=plan.startNo+offset;
+    if(offset<0) return {active:false,currentNo:plan.startNo,due:0,remainingAfter:(plan.totalCount-plan.startNo+1)*plan.monthly};
+    if(no>plan.totalCount) return {active:false,currentNo:plan.totalCount,due:0,remainingAfter:0};
+    return {
+      active:true,
+      currentNo:no,
+      due:plan.monthly,
+      remainingAfter:Math.max(0,(plan.totalCount-no)*plan.monthly)
+    };
+  }
+  function installmentFor(y,m){return state.installments.reduce((a,p)=>a+installmentInfo(p,y,m).due,0)}
+  function fixedTotal(){return fixed.reduce((a,x)=>a+x[1],0)}
+  function fixedGross(){return fixed.filter(x=>x[1]>0).reduce((a,x)=>a+x[1],0)}
+  function expectedPaybacks(){return Math.abs(fixed.filter(x=>x[1]<0).reduce((a,x)=>a+x[1],0))}
+  function loanMonthlyTotal(){return loanMonthly.reduce((a,x)=>a+x[1],0)}
+  function lockedTotal(){return locked.reduce((a,x)=>a+x[1],0)}
+  function mandatoryGross(y,m){return fixedGross()+loanMonthlyTotal()+lockedTotal()+installmentFor(y,m)}
+  function mandatoryNet(y,m){return mandatoryGross(y,m)-expectedPaybacks()}
+  function cfKey(kind,name){return `${kind}:${name}`}
+  function getCFSetting(kind,name,amount){
+    const key=cfKey(kind,name);
+    const saved=state.cashflowSettings?.[key]||{};
+    let defaultPayment='unknown';
+    if(kind==='loan'||kind==='locked')defaultPayment='bank';
+    if(Number(amount)<0)defaultPayment='inflow';
+    return {
+      day:Number(saved.day)||null,
+      payment:saved.payment||defaultPayment
+    };
+  }
+  function setCFSetting(kind,name,amount,patch){
+    const key=cfKey(kind,name);
+    state.cashflowSettings=state.cashflowSettings||{};
+    const current=getCFSetting(kind,name,amount);
+    state.cashflowSettings[key]={...current,...patch};
+    save();
+  }
+  function makeDueDate(y,m,day){
+    const last=new Date(y,m,0).getDate();
+    return new Date(y,m-1,Math.min(Number(day)||1,last),12,0,0);
+  }
+  function inCashflowWindow(date,start,end){
+    const d=new Date(date.getFullYear(),date.getMonth(),date.getDate(),12,0,0);
+    const s=new Date(start.getFullYear(),start.getMonth(),start.getDate(),12,0,0);
+    const e=new Date(end.getFullYear(),end.getMonth(),end.getDate(),12,0,0);
+    return d>s && d<=e;
+  }
+  function eachDueBeforePayday(day,start,end){
+    const out=[];
+    let idx=start.getFullYear()*12+start.getMonth();
+    const endIdx=end.getFullYear()*12+end.getMonth();
+    for(;idx<=endIdx;idx++){
+      const y=Math.floor(idx/12),m=(idx%12)+1;
+      const d=makeDueDate(y,m,day);
+      if(inCashflowWindow(d,start,end))out.push(d);
+    }
+    return out;
+  }
+  function cashflowWindow(){
+    const start=new Date();
+    const payday=nextSalaryInfo().target;
+    const rows=[];
+    let outflow=0,inflow=0,unknown=0,configured=0,totalConfigurable=0;
+
+    const addUnknown=(label)=>{unknown++;totalConfigurable++;rows.push({label,kind:'unknown',amount:0,date:null})};
+    const addKnown=(label,amount,date,kind='outflow')=>{
+      configured++;totalConfigurable++;
+      if(kind==='inflow')inflow+=Math.abs(Number(amount)||0);else outflow+=Math.abs(Number(amount)||0);
+      rows.push({label,kind,amount:Math.abs(Number(amount)||0),date});
+    };
+    const addConfiguredNotInWindow=()=>{configured++;totalConfigurable++};
+
+    // Card statements: only the currently confirmed statement month is used.
+    const [sy,sm]=String(state.statementMonth||'').split('-').map(Number);
+    state.cards.forEach(card=>{
+      if(!Number(card.nextBillAmount))return;
+      if(!card.dueDay||!sy||!sm){addUnknown(`${card.name} 결제일`);return}
+      const d=makeDueDate(sy,sm,card.dueDay);
+      if(inCashflowWindow(d,start,payday))addKnown(`${card.name} 확정 청구`,card.nextBillAmount,d,'outflow');
+      else addConfiguredNotInWindow();
+    });
+
+    // Monthly fixed expenses/paybacks. Sinking-fund reserves are planning allocations, not scheduled cash movements.
+    const excluded=new Set(['자동차보험 준비금','자동차세 준비금']);
+    fixed.forEach(([name,amount])=>{
+      if(excluded.has(name))return;
+      const cfg=getCFSetting('fixed',name,amount);
+      if(!cfg.day){addUnknown(name+' 결제일');return}
+      if(Number(amount)>0 && cfg.payment==='unknown'){addUnknown(name+' 결제수단');return}
+      const dates=eachDueBeforePayday(cfg.day,start,payday);
+      if(!dates.length){addConfiguredNotInWindow();return}
+      if(Number(amount)<0 || cfg.payment==='inflow'){
+        dates.forEach(d=>addKnown(name,amount,d,'inflow'));
+      }else if(cfg.payment==='bank'){
+        dates.forEach(d=>addKnown(name,amount,d,'outflow'));
+      }else{
+        // Card-paid fixed expenses are not subtracted here. Their cash effect is the card statement settlement.
+        addConfiguredNotInWindow();
+      }
+    });
+
+    loanMonthly.forEach(([name,amount])=>{
+      const cfg=getCFSetting('loan',name,amount);
+      if(!cfg.day){addUnknown(name+' 납부일');return}
+      const dates=eachDueBeforePayday(cfg.day,start,payday);
+      if(!dates.length){addConfiguredNotInWindow();return}
+      dates.forEach(d=>addKnown(name,amount,d,'outflow'));
+    });
+
+    locked.forEach(([name,amount])=>{
+      const cfg=getCFSetting('locked',name,amount);
+      if(!cfg.day){addUnknown(name+' 이체일');return}
+      const dates=eachDueBeforePayday(cfg.day,start,payday);
+      if(!dates.length){addConfiguredNotInWindow();return}
+      dates.forEach(d=>addKnown(name,amount,d,'outflow'));
+    });
+
+    // Recurring rules with known day. Payment type must be explicitly set unless it is an inflow.
+    (state.recurringRules||[]).filter(r=>r.active).forEach(rule=>{
+      const cfg=getCFSetting('recurring',rule.name,rule.amount);
+      const day=Number(rule.day)||cfg.day;
+      if(!day){addUnknown(rule.name+' 반복일');return}
+      if(cfg.payment==='unknown'){addUnknown(rule.name+' 결제수단');return}
+      const dates=eachDueBeforePayday(day,start,payday);
+      if(!dates.length){addConfiguredNotInWindow();return}
+      if(cfg.payment==='bank')dates.forEach(d=>addKnown(rule.name,rule.amount,d,'outflow'));
+      else if(cfg.payment==='inflow')dates.forEach(d=>addKnown(rule.name,rule.amount,d,'inflow'));
+      else addConfiguredNotInWindow();
+    });
+
+    rows.sort((a,b)=>{
+      if(!a.date&&!b.date)return a.label.localeCompare(b.label,'ko');
+      if(!a.date)return 1;if(!b.date)return -1;
+      return a.date-b.date;
+    });
+
+    return {start,payday,outflow,inflow,unknown,configured,totalConfigurable,rows};
+  }
+
+  function nextSalaryInfo(){
+    const now=new Date();
+    let y=now.getFullYear(),m=now.getMonth(),d=state.salaryDay||25;
+    let target=new Date(y,m,d,12,0,0);
+    const todayStart=new Date(y,m,now.getDate(),12,0,0);
+    if(target<todayStart) target=new Date(y,m+1,d,12,0,0);
+    const days=Math.max(0,Math.ceil((target-todayStart)/86400000));
+    return {target,days};
+  }
+  function nextBillTotal(){return state.cards.reduce((a,x)=>a+Number(x.nextBillAmount||0),0)}
+  function cardName(id){return state.cards.find(c=>c.id===id)?.name||'카드 미지정'}
+  function selectedCardTransactions(){return exp().filter(t=>t.method==='신용카드')}
+  function cardSpend(cardId){return selectedCardTransactions().filter(t=>t.cardId===cardId).reduce((a,t)=>a+Number(t.amount||0),0)}
+  function unassignedCardSpend(){return selectedCardTransactions().filter(t=>!t.cardId).reduce((a,t)=>a+Number(t.amount||0),0)}
+  function endMonthFor(plan){
+    const finalIndex=monthIndex(plan.startY,plan.startM)+(plan.totalCount-plan.startNo);
+    const y=Math.floor(finalIndex/12),m=finalIndex%12+1;
+    return `${y}-${pad(m)}`;
+  }
+  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+  function render(){
+    $('#monthTitle').textContent=`${state.y}.${pad(state.m)}`;
+    renderHome();renderLedger();renderBudget();renderCards();renderAssets();
+  }
+  function renderHome(){
+    const ls=liveSpent(), remain=state.livingBudget-ls;
+    $('#livingRemain').textContent=fmt(Math.max(0,remain));
+    $('#livingRemain').className='big '+(remain<0?'bad':'');
+    $('#homeSub').textContent=remain>=0
+      ? `생활비 ${fmt(state.livingBudget)} 중 ${fmt(ls)} 사용`
+      : `생활비 목표를 ${fmt(Math.abs(remain))} 초과`;
+
+    const now=new Date();
+    const todayKey=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    const todayExpense=state.tx
+      .filter(t=>t.type==='expense' && t.date===todayKey)
+      .reduce((a,t)=>a+Number(t.amount||0),0);
+    const currentSelected=state.y===now.getFullYear() && state.m===now.getMonth()+1;
+
+    $('#todaySpend').textContent=fmt(todayExpense);
+    $('#todaySpendSub').textContent=`${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())}`;
+    $('#monthSpendLabel').textContent=currentSelected?'이번 달 지출':`${state.m}월 지출`;
+    $('#homeExpense').textContent=fmt(sum(exp()));
+    $('#monthSpendSub').textContent=`${state.y}.${pad(state.m)} 전체 지출`;
+
+    const payday=nextSalaryInfo();
+    $('#nextSalaryDate').textContent=`${payday.target.getMonth()+1}/${payday.target.getDate()}`;
+    $('#salaryCountdown').textContent=payday.days===0?'오늘이 월급일':`D-${payday.days} · 매월 ${state.salaryDay||25}일`;
+
+    $('#homeCardBill').textContent=fmt(nextBillTotal());
+    $('#homeCardBillSub').textContent=`${state.statementMonth.replace('-','.')} 명세서`;
+
+    const cash=Math.max(0,Number(state.cashBalance)||0);
+    const reserve=Math.max(0,Number(state.emergencyReserve)||0);
+    const cf=cashflowWindow();
+    $('#safeCashCurrent').textContent=fmt(cash);
+    $('#safeCashBills').textContent=fmt(cf.outflow);
+    $('#safeCashInflows').textContent=fmt(cf.inflow);
+    $('#safeCashReserve').textContent=fmt(reserve);
+
+    if(cash<=0){
+      $('#safeCashAmount').textContent='현금 입력 필요';
+      $('#safeCashAmount').className='';
+      $('#safeCashAction').textContent='현금 입력';
+    }else{
+      const available=cash-cf.outflow+cf.inflow-reserve;
+      $('#safeCashAmount').textContent=fmt(available);
+      $('#safeCashAmount').className=available>=0?'good':'bad';
+      $('#safeCashAction').textContent='자산 수정';
+    }
+    $('#safeCashTitle').textContent=cf.unknown===0?'다음 월급일까지 예상 가용현금':'다음 월급일까지 확정분 기준 여유';
+    $('#safeCashNote').textContent=cf.unknown===0
+      ? `등록된 결제일 기준으로 다음 월급일 ${cf.payday.getMonth()+1}/${cf.payday.getDate()}까지 현금 유출·입금과 비상금 예약액을 반영했어. 카드 사용액은 카드대금 출금과 중복 차감하지 않아.`
+      : `현재 입력된 결제일만 반영했어. 아직 현금흐름 설정이 ${cf.unknown}개 남아 있어서 최종 안전사용액이 아니라 '확정분 기준' 값이야.`;
+
+    const goal=Number(state.apartmentFund);
+    $('#homeGoalText').textContent=`현재 입력 ${fmt(goal)}`;
+    $('#homeGoalRemain').textContent=`남음 ${fmt(Math.max(0,20000000-goal))}`;
+    $('#homeFutureText').textContent=`미래적금 ${fmt(Number(state.futureSavingBalance)||0)} · 아파트 목표와 별도`;
+
+    $('#statusCash').textContent=fmt(state.cashBalance);
+    $('#statusCardBill').textContent=fmt(nextBillTotal());
+
+    renderTxList('#homeRecent',monthTx().slice().sort(sortTx).slice(0,6));
+  }
+  function sortTx(a,b){return String(b.date).localeCompare(String(a.date))||Number(b.created||0)-Number(a.created||0)}
+  function renderTxList(sel,list){
+    $(sel).innerHTML=list.length?list.map(t=>`<div class="tx" data-tx-id="${esc(t.id)}" role="button" tabindex="0"><div class="tx-icon">${icon(t.category)}</div><div><b>${esc(t.memo||t.category)}</b><small>${t.date} · ${esc(t.category)}${t.method?' · '+esc(t.method):''}${t.method==='신용카드'?' · '+esc(cardName(t.cardId)):''}</small><span class="tx-edit-hint">눌러서 수정·삭제</span></div><div class="tx-amt ${t.type==='expense'?'bad':t.type==='income'?'good':''}">${t.type==='expense'?'-':t.type==='income'?'+':''}${fmt(t.amount)}</div></div>`).join(''):'<div class="empty">아직 입력한 내역이 없어.</div>';
+    $$(sel+' [data-tx-id]').forEach(row=>{
+      row.onclick=()=>openTx(null,row.dataset.txId);
+      row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTx(null,row.dataset.txId)}};
+    });
+  }
+  function renderLedger(){
+    const income=sum(inc())||state.salary, expense=sum(exp());
+    $('#ledgerIncome').textContent=fmt(income);$('#ledgerExpense').textContent=fmt(expense);
+    renderTxList('#ledgerList',monthTx().slice().sort(sortTx));
+  }
+  function renderBudget(){
+    const inst=installmentFor(state.y,state.m);
+    const items=[
+      ['월급',state.salary],['고정·준고정비',-fixedTotal()],['대출 최소유출',-loanMonthlyTotal()],
+      ['미래적금+퇴직연금',-530000],['아파트자금',-1000000],['생활비 목표',-state.livingBudget],['무이자 할부',-inst]
+    ];
+    const bal=items.reduce((a,x)=>a+x[1],0);
+    $('#planBalance').textContent=fmt(bal);$('#planBalance').className=bal>=0?'good':'bad';
+    $('#planStatus').textContent=bal>=0?'흑자 계획':'부족 예상';$('#planStatus').className='plan-status '+(bal>=0?'good':'bad');
+    $('#planList').innerHTML=items.map(([n,v])=>`<div class="plan-row"><span>${n}</span><b class="${v<0?'':'good'}">${v<0?'-':'+'}${fmt(Math.abs(v))}</b></div>`).join('');
+
+    $('#autoScheduleMonth').textContent=`${state.y}.${pad(state.m)} 자동 생성`;
+    const schedule=[
+      {name:'월급',note:`${state.salaryDay||25}일 · 예상`,amount:state.salary,kind:'salary'},
+      {name:'고정·준고정비 결제',note:'월중 예정 · 상세 결제일 미설정',amount:-fixedGross(),kind:'auto'},
+      {name:'예상 페이백',note:'월중 예정 · 휴대폰/Google AI',amount:expectedPaybacks(),kind:'auto'},
+      {name:'대출 최소유출',note:'월중 예정',amount:-loanMonthlyTotal(),kind:'auto'},
+      {name:'미래적금',note:'월중 예정 · 잠금',amount:-500000,kind:'auto'},
+      {name:'퇴직연금',note:'월중 예정',amount:-30000,kind:'auto'},
+      {name:'아파트자금',note:'월중 예정 · 최소 100만원',amount:-1000000,kind:'auto'}
+    ];
+    const autoInst=installmentFor(state.y,state.m);
+    if(autoInst>0) schedule.push({name:'무이자 할부',note:'선택월 자동 계산',amount:-autoInst,kind:'auto'});
+    $('#autoSchedule').innerHTML=schedule.map(x=>`<div class="schedule-row"><div><b>${x.name}<em class="schedule-tag ${x.kind}">${x.kind==='salary'?'25일':'자동'}</em></b><small>${x.note}</small></div><strong class="${x.amount>0?'good':'bad'}">${x.amount>0?'+':'-'}${fmt(Math.abs(x.amount))}</strong></div>`).join('');
+
+    $('#fixedList').innerHTML=[...fixed,...loanMonthly,...locked].map(([n,v])=>`<div class="fixed-row"><b>${n}</b><strong class="${v<0?'good':''}">${v<0?'+':''}${fmt(Math.abs(v))}</strong></div>`).join('');
+    $('#budgetEditor').innerHTML=Object.entries(state.categoryBudgets).map(([cat,b])=>`<div class="budget-edit-row"><b>${icon(cat)} ${cat}</b><input data-budget-cat="${esc(cat)}" type="number" min="0" step="1000" value="${Number(b)||0}"></div>`).join('');
+    $$('[data-budget-cat]').forEach(input=>input.onchange=()=>{
+      state.categoryBudgets[input.dataset.budgetCat]=Math.max(0,Number(input.value)||0);
+      state.livingBudget=Object.values(state.categoryBudgets).reduce((a,v)=>a+(Number(v)||0),0);
+      save();render();
+    });
+
+    renderCashflowSettings();
+  }
+  function renderCashflowSettings(){
+    const cf=cashflowWindow();
+    $('#cfNextPayday').textContent=`${cf.payday.getMonth()+1}/${cf.payday.getDate()}`;
+    $('#cfOutflow').textContent=fmt(cf.outflow);
+    $('#cfUnknown').textContent=`${cf.unknown}개`;
+    $('#cashflowCompleteness').textContent=cf.unknown===0?'설정 완료':'미설정 '+cf.unknown+'개';
+
+    const paymentOptions=(selected,allowInflow=false)=>{
+      const opts=allowInflow
+        ? [['inflow','입금']]
+        : [['unknown','미입력'],['bank','계좌·현금'],['card','카드']];
+      return opts.map(([v,l])=>`<option value="${v}" ${selected===v?'selected':''}>${l}</option>`).join('');
+    };
+
+    const fixedRows=fixed
+      .filter(([name])=>!['자동차보험 준비금','자동차세 준비금'].includes(name))
+      .map(([name,amount])=>{
+        const cfg=getCFSetting('fixed',name,amount);
+        const inflow=Number(amount)<0;
+        return `<div class="cf-row">
+          <div><b>${esc(name)}</b><small>${inflow?'입금 예정':'고정·준고정비'} · ${fmt(Math.abs(amount))}</small></div>
+          <input data-cf-day="fixed|${esc(name)}" type="number" min="1" max="31" value="${cfg.day??''}" placeholder="일">
+          <select data-cf-pay="fixed|${esc(name)}" ${inflow?'disabled':''}>${paymentOptions(inflow?'inflow':cfg.payment,inflow)}</select>
+        </div>`;
+      }).join('');
+
+    const loanRows=loanMonthly.map(([name,amount])=>{
+      const cfg=getCFSetting('loan',name,amount);
+      return `<div class="cf-row">
+        <div><b>${esc(name)}</b><small>대출 · 계좌유출 ${fmt(amount)}</small></div>
+        <input data-cf-day="loan|${esc(name)}" type="number" min="1" max="31" value="${cfg.day??''}" placeholder="일">
+        <select disabled><option>계좌·현금</option></select>
+      </div>`;
+    }).join('');
+
+    const lockedRows=locked.map(([name,amount])=>{
+      const cfg=getCFSetting('locked',name,amount);
+      return `<div class="cf-row">
+        <div><b>${esc(name)}</b><small>잠금 이체 · ${fmt(amount)}</small></div>
+        <input data-cf-day="locked|${esc(name)}" type="number" min="1" max="31" value="${cfg.day??''}" placeholder="일">
+        <select disabled><option>계좌·현금</option></select>
+      </div>`;
+    }).join('');
+
+    const recurringRows=(state.recurringRules||[]).filter(r=>r.active).map(rule=>{
+      const cfg=getCFSetting('recurring',rule.name,rule.amount);
+      return `<div class="cf-row">
+        <div><b>${esc(rule.name)}</b><small>반복 ${rule.day}일 · ${fmt(rule.amount)}</small></div>
+        <input value="${rule.day}" disabled>
+        <select data-cf-pay="recurring|${esc(rule.name)}">${paymentOptions(cfg.payment,false)}</select>
+      </div>`;
+    }).join('');
+
+    $('#cashflowSettings').innerHTML=`
+      <div class="cf-group"><h3>고정비 · 페이백</h3>${fixedRows}</div>
+      <div class="cf-group"><h3>대출</h3>${loanRows}</div>
+      <div class="cf-group"><h3>잠금 저축·이체</h3>${lockedRows}</div>
+      <div class="cf-group"><h3>반복 결제</h3>${recurringRows||'<div class="empty">등록된 반복결제 없음</div>'}</div>`;
+
+    $$('[data-cf-day]').forEach(input=>input.onchange=()=>{
+      const [kind,name]=input.dataset.cfDay.split('|');
+      const source=kind==='fixed'?fixed:kind==='loan'?loanMonthly:locked;
+      const amount=source.find(x=>x[0]===name)?.[1]||0;
+      const n=Number(input.value);
+      setCFSetting(kind,name,amount,{day:n>=1&&n<=31?n:null});
+      render();
+    });
+    $$('[data-cf-pay]').forEach(select=>select.onchange=()=>{
+      const [kind,name]=select.dataset.cfPay.split('|');
+      let amount=0;
+      if(kind==='fixed')amount=fixed.find(x=>x[0]===name)?.[1]||0;
+      if(kind==='recurring')amount=(state.recurringRules||[]).find(x=>x.name===name)?.amount||0;
+      setCFSetting(kind,name,amount,{payment:select.value});
+      render();
+    });
+
+    const knownRows=cf.rows.filter(r=>r.date);
+    $('#cashflowBreakdown').innerHTML=knownRows.length
+      ? `<div class="section-head"><h2>다음 월급 전 확정 일정</h2><small>오늘 이후 ~ ${cf.payday.getMonth()+1}/${cf.payday.getDate()}</small></div>`+
+        knownRows.map(r=>`<div class="cf-breakdown-row"><span>${r.date.getMonth()+1}/${r.date.getDate()} · ${esc(r.label)}</span><b class="${r.kind==='inflow'?'good':'bad'}">${r.kind==='inflow'?'+':'-'}${fmt(r.amount)}</b></div>`).join('')
+      : `<div class="automation-note">현재 등록된 날짜 기준으로 다음 월급 전 확정 현금 이동이 없어.</div>`;
+  }
+  function renderCards(){
+    const selectedSpend=selectedCardTransactions().reduce((a,t)=>a+Number(t.amount||0),0);
+    $('#selectedCardSpend').textContent=fmt(selectedSpend);
+    $('#cardBillTotal').textContent=fmt(nextBillTotal());
+    $('#billMonthLabel').textContent=`${state.statementMonth.replace('-','.')} 명세서 기준`;
+    $('#statementMonthInput').value=state.statementMonth||'';
+
+    $('#billList').innerHTML=state.cards.map(card=>{
+      const due=card.dueDay?`매월 ${card.dueDay}일`:'결제일 미입력';
+      return `<div class="card-manage-item">
+        <div class="card-manage-head">
+          <div><b>${esc(card.name)}</b><span class="statement-chip">${due}</span></div>
+          <span>최근 확정 청구</span>
+        </div>
+        <div class="card-manage-stats">
+          <div><span>선택월 사용</span><strong>${fmt(cardSpend(card.id))}</strong></div>
+          <div><span>확정 청구액</span><strong>${fmt(card.nextBillAmount)}</strong></div>
+          <div><span>결제일</span><strong>${card.dueDay?card.dueDay+'일':'미입력'}</strong></div>
+        </div>
+        <div class="card-edit-grid">
+          <label>결제일<input data-card-due="${card.id}" type="number" min="1" max="31" value="${card.dueDay??''}" placeholder="예: 10"></label>
+          <label>최근 확정 청구액<input data-card-bill="${card.id}" type="number" min="0" value="${card.nextBillAmount}"></label>
+        </div>
+      </div>`
+    }).join('');
+
+    const unassigned=unassignedCardSpend();
+    $('#unassignedCardNote').hidden=unassigned<=0;
+    $('#unassignedCardNote').textContent=unassigned>0?`카드 미지정 지출 ${fmt(unassigned)}이 있어. 앞으로 지출 입력 시 카드까지 선택하면 카드별 사용액이 정확해져.`:'';
+
+    $$('[data-card-due]').forEach(input=>input.onchange=()=>{
+      const card=state.cards.find(c=>c.id===input.dataset.cardDue); if(!card)return;
+      const n=Number(input.value);card.dueDay=n>=1&&n<=31?n:null;save();render();
+    });
+    $$('[data-card-bill]').forEach(input=>input.onchange=()=>{
+      const card=state.cards.find(c=>c.id===input.dataset.cardBill); if(!card)return;
+      card.nextBillAmount=Math.max(0,Number(input.value)||0);save();render();
+    });
+    $('#statementMonthInput').onchange=()=>{
+      if(/^\d{4}-\d{2}$/.test($('#statementMonthInput').value)){
+        state.statementMonth=$('#statementMonthInput').value;save();render();
+      }
+    };
+
+    let basisY=state.y,basisM=state.m;
+    if(monthIndex(basisY,basisM)<monthIndex(2026,10)){basisY=2026;basisM=10}
+    $('#installmentBasis').textContent=`${basisY}.${pad(basisM)} 기준 · 자동 감소`;
+
+    $('#installmentList').innerHTML=state.installments.length?state.installments.map(plan=>{
+      const info=installmentInfo(plan,basisY,basisM);
+      const beforeStart=monthIndex(basisY,basisM)<monthIndex(plan.startY,plan.startM);
+      const finished=monthIndex(basisY,basisM)>monthIndex(...endMonthFor(plan).split('-').map(Number));
+      const completed=beforeStart?plan.startNo-1:finished?plan.totalCount:info.currentNo;
+      const pct=Math.max(0,Math.min(100,completed/plan.totalCount*100));
+      const status=info.active?`${info.currentNo}/${plan.totalCount}회차 예정`:(finished?'완료':`다음 ${plan.startNo}/${plan.totalCount}회차`);
+      return `<div class="installment-card">
+        <div class="installment-top">
+          <b>${esc(plan.name)} <span class="statement-chip">${esc(cardName(plan.cardId))}</span></b>
+          <div class="installment-actions"><strong>${info.active?fmt(info.due)+'/월':'납부 없음'}</strong><button class="installment-delete" data-inst-delete="${plan.id}" type="button">삭제</button></div>
+        </div>
+        <div class="installment-state"><span><b>${status}</b></span><span>결제 후 잔액 ${fmt(info.remainingAfter)}</span></div>
+        <div class="installment-meta"><span>종료 ${endMonthFor(plan)}</span><span>총 ${plan.totalCount}회</span></div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <span class="tag good">무이자</span>
+      </div>`
+    }).join(''):'<div class="empty">등록된 할부가 없어.</div>';
+
+    $$('[data-inst-delete]').forEach(btn=>btn.onclick=()=>{
+      const plan=state.installments.find(x=>x.id===btn.dataset.instDelete);
+      if(!plan)return;
+      if(!confirm(`${plan.name} 할부를 삭제할까?`))return;
+      state.installments=state.installments.filter(x=>x.id!==plan.id);save();render();
+    });
+  }
+  function renderAssets(){
+    const plan=state.apartmentPlan||defaults.apartmentPlan;
+    const savingGoal=Math.max(0,Number(plan.savingGoal)||0);
+    const goal=Number(state.apartmentFund)||0;
+    const pct=savingGoal>0?Math.min(100,goal/savingGoal*100):100;
+
+    $('#goalNow').textContent=fmt(goal);
+    $('#goalPct').textContent=pct.toFixed(1)+'%';
+    $('#goalTargetText').textContent=(savingGoal||0).toLocaleString('ko-KR')+'원';
+    $('#goalBar').style.width=pct+'%';
+    $('#goalApartmentOnly').textContent=fmt(state.apartmentFund);
+    $('#goalFutureSeparate').textContent=fmt(state.futureSavingBalance);
+
+    const purchase=Math.max(0,Number(plan.purchasePrice)||0);
+    const premium=Math.max(0,Number(plan.premium)||0);
+    const extension=Math.max(0,Number(plan.extension)||0);
+    const aircon=Math.max(0,Number(plan.aircon)||0);
+    const policyLoan=Math.max(0,Number(plan.policyLoan)||0);
+    const contractPaid=Math.max(0,Number(plan.contractPaid)||0);
+    const closing=Math.max(0,Number(plan.closingReserve)||0);
+    const otherFunds=Math.max(0,Number(plan.otherSecuredFunds)||0);
+    const totalCost=purchase+premium+extension+aircon;
+    const moveInNeed=Math.max(0,totalCost-policyLoan-contractPaid+closing);
+    const currentFund=Math.max(0,Number(state.apartmentFund)||0);
+    const currentGap=Math.max(0,moveInNeed-currentFund-otherFunds);
+    const goalGap=Math.max(0,moveInNeed-savingGoal-otherFunds);
+    const coverage=moveInNeed>0?Math.min(100,savingGoal/moveInNeed*100):100;
+
+    $('#aptMoveInNeed').textContent=fmt(moveInNeed);
+    $('#aptMoveInNeed').className='hero-number '+(moveInNeed>0?'bad':'good');
+    $('#aptTotalCost').textContent=fmt(totalCost);
+    $('#aptPolicyLoan').textContent=fmt(policyLoan);
+    $('#aptContractPaid').textContent=fmt(contractPaid);
+    $('#aptClosingReserve').textContent=fmt(closing);
+    $('#aptSavingGoalLabel').textContent=fmt(savingGoal);
+    $('#aptSavingGoalBar').style.width=coverage+'%';
+
+    $('#aptPurchaseLine').textContent=fmt(purchase);
+    $('#aptPremiumLine').textContent=fmt(premium);
+    $('#aptExtensionLine').textContent=fmt(extension);
+    $('#aptAirconLine').textContent=fmt(aircon);
+    $('#aptTotalLine').textContent=fmt(totalCost);
+    $('#aptLoanLine').textContent='-'+fmt(policyLoan);
+    $('#aptPaidLine').textContent='-'+fmt(contractPaid);
+    $('#aptClosingLine').textContent='+'+fmt(closing);
+    $('#aptNeedLine').textContent=fmt(moveInNeed);
+
+    $('#aptCurrentFund').textContent=fmt(currentFund);
+    $('#aptOtherFunds').textContent=fmt(otherFunds);
+    $('#aptCurrentGap').textContent=fmt(currentGap);
+    $('#aptGoalGap').textContent=fmt(goalGap);
+    $('#aptGapNote').innerHTML=goalGap>0
+      ? `아파트자금 목표 ${fmt(savingGoal)}을 전부 달성해도 기타 확보자금을 제외하면 약 <b>${fmt(goalGap)}</b>이 추가로 필요해.`
+      : `현재 목표와 확보자금 기준으로 계산상 입주 필요현금을 모두 충당해.`;
+
+    $('#aptPurchasePrice').value=purchase;
+    $('#aptPremium').value=premium;
+    $('#aptExtension').value=extension;
+    $('#aptAircon').value=aircon;
+    $('#aptPolicyLoanInput').value=policyLoan;
+    $('#aptContractPaidInput').value=contractPaid;
+    $('#aptClosingReserveInput').value=closing;
+    $('#aptOtherSecuredFunds').value=otherFunds;
+    $('#aptSavingGoalInput').value=savingGoal;
+
+    $('#bankDebtMetric').textContent=fmt(loans.reduce((a,x)=>a+x.balance,0));
+    $('#loanMonthlySnapshot').textContent=fmt(loanSnapshotMonthly);
+    const basisY=Math.max(state.y,2026),basisM=(state.y<2026?10:state.m);
+    const remainingInstallments=state.installments.reduce((a,p)=>a+installmentInfo(p,basisY,basisM).remainingAfter,0);
+    $('#installDebtMetric').textContent=fmt(remainingInstallments);
+    $('#loanList').innerHTML=loans.map(x=>`<div class="loan-row"><div><b>${esc(x.name)}</b><small>${x.rate} · ${esc(x.sub)}</small></div><strong>${fmt(x.balance)}</strong></div>`).join('');
+    $('#apartmentFund').value=state.apartmentFund;$('#futureSavingBalance').value=state.futureSavingBalance;$('#cashBalance').value=state.cashBalance;$('#monthlySalary').value=state.salary;$('#emergencyReserve').value=state.emergencyReserve;
+  }
+  function setType(type){
+    txType=type;$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===type));
+    const map={expense:['식비','주유','데이트','쇼핑·생활','구독','차량','결혼','기타'],income:['급여','경비정산','기타수입'],transfer:['미래적금','퇴직연금','아파트자금','계좌이동']};
+    $('#txCategory').innerHTML=map[type].map(x=>`<option>${x}</option>`).join('');
+    $('#txMethod').disabled=type==='transfer';
+    refreshTxCardField();
+  }
+  function refreshCardOptions(){
+    const opts=state.cards.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    $('#txCard').innerHTML=opts;
+    $('#instCard').innerHTML=opts;
+  }
+  function refreshTxCardField(){
+    const show=txType==='expense' && $('#txMethod').value==='신용카드';
+    $('#txCardField').hidden=!show;
+  }
+  function openTx(cat,txId=null){
+    refreshCardOptions();
+    editingTxId=txId;
+    const existing=txId?state.tx.find(t=>t.id===txId):null;
+
+    if(existing){
+      setType(existing.type||'expense');
+      $('#txDialogTitle').textContent='내역 수정';
+      $('#txSubmitBtn').textContent='수정 저장';
+      $('#deleteTxBtn').hidden=false;
+      $('#txAmount').value=existing.amount||'';
+      $('#txCategory').value=existing.category||$('#txCategory').value;
+      $('#txMethod').value=existing.type==='transfer'?'계좌이체':(existing.method||'계좌이체');
+      refreshTxCardField();
+      if(existing.cardId&&$('#txCard'))$('#txCard').value=existing.cardId;
+      $('#txDate').value=existing.date||'';
+      $('#txMemo').value=existing.memo||'';
+    }else{
+      setType('expense');if(cat)$('#txCategory').value=cat;
+      $('#txDialogTitle').textContent='내역 추가';
+      $('#txSubmitBtn').textContent='저장';
+      $('#deleteTxBtn').hidden=true;
+      const d=new Date(),ds=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      $('#txDate').value=ds;$('#txAmount').value='';$('#txMemo').value='';
+      $('#txMethod').value='신용카드';refreshTxCardField();
+    }
+
+    $('#txDialog').showModal();
+    setTimeout(()=>$('#txAmount').focus(),30);
+  }
+  function nav(v){
+    $$('.view').forEach(x=>x.classList.remove('active'));$('#view-'+v).classList.add('active');
+    $$('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  $$('.bottom-nav button').forEach(b=>b.onclick=()=>nav(b.dataset.view));
+  $$('[data-nav]').forEach(b=>b.onclick=()=>nav(b.dataset.nav));
+  $('#safeCashAction').onclick=()=>nav('assets');
+  $('#syncPill').onclick=()=>nav('assets');
+  $('#sendMagicLink').onclick=async()=>{
+    if(!cloud)return;
+    const email=$('#syncEmail').value.trim();
+    if(!email){
+      $('#syncLoginMessage').textContent='이메일을 입력해줘.';
+      $('#syncLoginMessage').className='sync-message bad';
+      return;
+    }
+    if(!/^https?:$/.test(location.protocol)){
+      $('#syncLoginMessage').textContent='이메일 로그인은 Vercel 같은 HTTPS 배포 주소에서 사용해. 지금 로컬 파일에서는 기기 저장만 가능해.';
+      $('#syncLoginMessage').className='sync-message bad';
+      return;
+    }
+    $('#sendMagicLink').disabled=true;
+    $('#syncLoginMessage').textContent='로그인 링크 보내는 중...';
+    $('#syncLoginMessage').className='sync-message';
+    const {error}=await cloud.auth.signInWithOtp({
+      email,
+      options:{emailRedirectTo:location.origin+location.pathname}
+    });
+    $('#sendMagicLink').disabled=false;
+    if(error){
+      $('#syncLoginMessage').textContent='로그인 링크 전송 실패: '+error.message;
+      $('#syncLoginMessage').className='sync-message bad';
+    }else{
+      $('#syncLoginMessage').textContent='메일을 보냈어. 링크를 눌러 앱으로 돌아오면 자동 로그인돼.';
+      $('#syncLoginMessage').className='sync-message good';
+    }
+  };
+  $('#syncNowBtn').onclick=()=>pushCloudState(true);
+  $('#signOutBtn').onclick=async()=>{if(cloud)await cloud.auth.signOut()};
+  $('#prevMonth').onclick=()=>{state.m--;if(state.m===0){state.m=12;state.y--}save();render()};
+  $('#nextMonth').onclick=()=>{state.m++;if(state.m===13){state.m=1;state.y++}save();render()};
+  $('#addBtn').onclick=()=>openTx();
+  $$('[data-quick]').forEach(b=>b.onclick=()=>openTx(b.dataset.quick));
+  $$('[data-type]').forEach(b=>b.onclick=()=>setType(b.dataset.type));
+  $('#cancelDialog').onclick=()=>{editingTxId=null;$('#txDialog').close()};
+  $('#txMethod').onchange=refreshTxCardField;
+  $('#addInstallmentBtn').onclick=()=>{
+    refreshCardOptions();
+    $('#instName').value='';$('#instMonthly').value='';$('#instTotal').value='';$('#instCurrentNo').value='1';
+    $('#installmentDialog').showModal();
+  };
+  $('#cancelInstallment').onclick=()=>$('#installmentDialog').close();
+  $('#installmentForm').onsubmit=e=>{
+    e.preventDefault();
+    const name=$('#instName').value.trim(),monthly=Math.max(0,Number($('#instMonthly').value)||0),total=Math.max(0,Number($('#instTotal').value)||0),current=Math.max(0,Number($('#instCurrentNo').value)||0);
+    if(!name||!monthly||total<2||current<1||current>total)return;
+    state.installments.push({
+      id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),
+      name,cardId:$('#instCard').value,monthly,startY:state.y,startM:state.m,startNo:current,totalCount:total,builtin:false
+    });
+    save();$('#installmentDialog').close();render();
+  };
+  $('#txForm').onsubmit=e=>{
+    e.preventDefault();const amount=Math.max(0,Number($('#txAmount').value)||0);if(!amount)return;
+    const method=txType==='transfer'?'계좌이동':$('#txMethod').value;
+    const values={type:txType,amount,category:$('#txCategory').value,method,cardId:(txType==='expense'&&method==='신용카드')?$('#txCard').value:null,date:$('#txDate').value,memo:$('#txMemo').value.trim()};
+
+    if(editingTxId){
+      const i=state.tx.findIndex(t=>t.id===editingTxId);
+      if(i>=0)state.tx[i]={...state.tx[i],...values,editedAt:Date.now()};
+    }else{
+      state.tx.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),...values,created:Date.now()});
+    }
+
+    editingTxId=null;save();$('#txDialog').close();render();
+  };
+  $('#deleteTxBtn').onclick=()=>{
+    if(!editingTxId)return;
+    const t=state.tx.find(x=>x.id===editingTxId);
+    if(!t)return;
+    if(!confirm(`${t.memo||t.category} ${fmt(t.amount)} 내역을 삭제할까?`))return;
+    state.tx=state.tx.filter(x=>x.id!==editingTxId);
+    editingTxId=null;save();$('#txDialog').close();render();
+  };
+  $('#clearMonth').onclick=()=>{const count=monthTx().length;if(!count){alert('선택한 달에 삭제할 내역이 없어.');return}if(!confirm(`${state.y}.${pad(state.m)} 내역 ${count}건을 모두 삭제할까? 이 작업은 되돌리기 어려워.`))return;const k=monthKey();state.tx=state.tx.filter(t=>!(t.date||'').startsWith(k));save();render()};
+  $('#saveAssets').onclick=()=>{state.apartmentFund=Math.max(0,Number($('#apartmentFund').value)||0);state.futureSavingBalance=Math.max(0,Number($('#futureSavingBalance').value)||0);state.cashBalance=Math.max(0,Number($('#cashBalance').value)||0);state.salary=Math.max(0,Number($('#monthlySalary').value)||0);state.emergencyReserve=Math.max(0,Number($('#emergencyReserve').value)||0);save();render()};
+  $('#saveApartmentPlan').onclick=()=>{
+    state.apartmentPlan={
+      ...(state.apartmentPlan||defaults.apartmentPlan),
+      purchasePrice:Math.max(0,Number($('#aptPurchasePrice').value)||0),
+      premium:Math.max(0,Number($('#aptPremium').value)||0),
+      extension:Math.max(0,Number($('#aptExtension').value)||0),
+      aircon:Math.max(0,Number($('#aptAircon').value)||0),
+      policyLoan:Math.max(0,Number($('#aptPolicyLoanInput').value)||0),
+      contractPaid:Math.max(0,Number($('#aptContractPaidInput').value)||0),
+      closingReserve:Math.max(0,Number($('#aptClosingReserveInput').value)||0),
+      otherSecuredFunds:Math.max(0,Number($('#aptOtherSecuredFunds').value)||0),
+      savingGoal:Math.max(0,Number($('#aptSavingGoalInput').value)||0)
+    };
+    save();render();
+  };
+  $('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='woni-money-backup.json';a.click();URL.revokeObjectURL(a.href)};
+  $('#importBtn').onclick=()=>$('#importFile').click();
+  $('#importFile').onchange=async()=>{
+    const file=$('#importFile').files?.[0];
+    if(!file)return;
+    try{
+      const raw=JSON.parse(await file.text());
+      if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('올바른 백업 객체가 아님');
+      if(!confirm('현재 데이터를 이 JSON 백업으로 교체할까? 교체 전에 현재 상태는 자동 임시백업해둘게.'))return;
+      localStorage.setItem('woni-money-preimport-backup',JSON.stringify(state));
+      state=normalizeState(raw);
+      ensureRecurringTransactions(new Date());
+      save();
+      refreshCardOptions();render();
+      alert('백업을 불러왔어.');
+    }catch(err){
+      alert('JSON 백업을 불러오지 못했어: '+(err?.message||'파일을 확인해줘.'));
+    }finally{
+      $('#importFile').value='';
+    }
+  };
+  $('#resetBtn').onclick=()=>{if(!confirm('모든 거래·자산·카드 설정을 초기화할까? 먼저 JSON 백업을 권장해.'))return;if(!confirm('정말 전체 초기화할까?'))return;localStorage.removeItem(KEY);state=applyKnownDataUpdates(clone(defaults));save();render()};
+
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('#installBanner').classList.add('show')});
+  $('#installBtn').onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('#installBanner').classList.remove('show')};
+  window.addEventListener('appinstalled',()=>$('#installBanner').classList.remove('show'));
+
+  ensureRecurringTransactions(new Date());refreshCardOptions();setType('expense');render();renderSyncPanel();registerOfflineSupport();initCloud();
+})();
+</script>
+</body>
+</html>
